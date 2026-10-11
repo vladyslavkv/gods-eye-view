@@ -91,12 +91,10 @@ try {
   const content = await page.evaluate(async () => {
     const d = window.__godsEyeView.sceneDirector;
     const scene = d._project.scenes.find(({ title }) =>
-      /Nepal Flood Incident/i.test(title),
+      /Global Flights Radar/i.test(title),
     );
     if (!scene) return { exists: false };
-    const shot =
-      scene.shots.find(({ title }) => /Regional Approach/i.test(title)) ||
-      scene.shots[0];
+    const shot = scene.shots[0];
     const loaded = await d.loadShot(scene.id, shot.id, { flyDuration: 0.3 });
     return {
       exists: true,
@@ -105,11 +103,11 @@ try {
     };
   });
   check(
-    'existing Nepal scene and authored shots load',
-    content.exists && content.shots >= 25 && content.loaded,
+    'existing built-in scene and authored shots load',
+    content.exists && content.shots >= 1 && content.loaded,
   );
   await new Promise((resolve) => setTimeout(resolve, 2500));
-  await page.screenshot({ path: path.join(shots, 'nepal-regional.png') });
+  await page.screenshot({ path: path.join(shots, 'scene-loaded.png') });
   await page.evaluate(() => {
     const g = window.__godsEyeView;
     g.sceneDirector.stopScene();
@@ -121,7 +119,7 @@ try {
     });
   });
   await new Promise((resolve) => setTimeout(resolve, 1000));
-  await page.screenshot({ path: path.join(shots, 'nepal-angle.png') });
+  await page.screenshot({ path: path.join(shots, 'scene-angle.png') });
   check(
     'no pending clocks after Stop',
     await page.evaluate(

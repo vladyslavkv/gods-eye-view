@@ -348,7 +348,7 @@ export function fakeController({ refuse = false } = {}) {
     calls,
     acquireImageryComparison(options) {
       calls.push(['acquire', options.owner, options.switchPolicy]);
-      if (refuse) throw new Error('held by bhote');
+      if (refuse) throw new Error('held by another owner');
       let settle;
       const ready = new Promise((resolve) => {
         settle = resolve;

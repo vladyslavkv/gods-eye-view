@@ -359,14 +359,8 @@ const layers = [
   },
 ];
 
-/**
- * Catalog layers deliberately outside voice, with the reason. The Bhote Koshi
- * pair belong to a scripted scene and are driven by `control_scene`.
- */
-export const VOICE_OFF_LAYERS = Object.freeze({
-  'bhote-koshi-2026': 'scene-driven event layer (control_scene)',
-  'bhote-koshi-locator': 'scene-driven event layer (control_scene)',
-});
+/** Catalog layers deliberately outside voice, with the reason. */
+export const VOICE_OFF_LAYERS = Object.freeze({});
 
 const TYPE_NAMES = Object.freeze({
   n: 'number',
