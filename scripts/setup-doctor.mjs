@@ -8,8 +8,6 @@ import { projectRoot } from './project-root.mjs';
 import { selectMapStartupRoute } from '../src/mapStartup.js';
 
 const ROOT = projectRoot(import.meta.url);
-const OPENSKY_AUTH_MODE_DEFAULT = 'oauth';
-const OPENSKY_AUTH_MODES = new Set(['basic', 'oauth', 'auto', 'anon']);
 
 export const CREDENTIALS = Object.freeze([
   { name: 'GOOGLE_MAPS_API_KEY', label: 'Google Maps', keychain: [['google-maps-api', 'api-key'], ['google-maps-api', 'default'], ['google-maps-api', 'key']] },
@@ -19,20 +17,6 @@ export const CREDENTIALS = Object.freeze([
   { name: 'AISSTREAM_API_KEY', label: 'AISStream vessels', keychain: [['aisstream-api', 'api-key']] },
   { name: 'FIRMS_MAP_KEY', label: 'NASA FIRMS fires', keychain: [['firms-map', 'map-key']] },
   { name: 'TOMTOM_API_KEY', label: 'TomTom traffic', keychain: [['tomtom-api', 'api-key']] },
-  {
-    name: 'OPENSKY_CLIENT_ID',
-    label: 'OpenSky client ID',
-    keychain: ['opensky-network', 'opensky'].flatMap((service) => (
-      ['client_id', 'client-id', 'client', 'api-key'].map((account) => [service, account])
-    )),
-  },
-  {
-    name: 'OPENSKY_CLIENT_SECRET',
-    label: 'OpenSky client secret',
-    keychain: ['opensky-network', 'opensky'].flatMap((service) => (
-      ['client_secret', 'client-secret', 'secret'].map((account) => [service, account])
-    )),
-  },
   { name: 'LL2_API_TOKEN', label: 'Launch Library 2', keychain: [] },
   { name: 'MAPILLARY_CLIENT_TOKEN', label: 'Mapillary street level', keychain: [['mapillary', 'client-token'], ['mapillary', 'token']] },
 ]);
@@ -104,21 +88,6 @@ export function readDoctorDotenvValue(
   return String(values[key] ?? '');
 }
 
-/** Resolve the OpenSky auth mode using the same environment and dotenv precedence as the launcher. */
-export function resolveOpenSkyAuthMode({
-  authoritativeEnvironment = false,
-  environment = process.env,
-  rootDir = ROOT,
-} = {}) {
-  const environmentDefinesMode = Object.prototype.hasOwnProperty.call(environment, 'OPENSKY_AUTH_MODE');
-  const environmentMode = String(environment.OPENSKY_AUTH_MODE || '').trim();
-  const dotenvMode = authoritativeEnvironment && environmentDefinesMode
-    ? ''
-    : readDoctorDotenvValue('OPENSKY_AUTH_MODE', rootDir);
-  const mode = (environmentMode || dotenvMode).trim().toLowerCase();
-  return OPENSKY_AUTH_MODES.has(mode) ? mode : OPENSKY_AUTH_MODE_DEFAULT;
-}
-
 function hasKeychainItem(service, account) {
   if (process.platform !== 'darwin') return false;
   const result = spawnSync('security', [
@@ -146,25 +115,8 @@ export function resolveCredential(spec, {
   return { configured: false, source: null };
 }
 
-export function buildCapabilitySummary(
-  credentials,
-  { openSkyAuthMode = OPENSKY_AUTH_MODE_DEFAULT } = {},
-) {
+export function buildCapabilitySummary(credentials) {
   const configured = (name) => credentials[name]?.configured === true;
-  const hasOAuthCredentials = configured('OPENSKY_CLIENT_ID') && configured('OPENSKY_CLIENT_SECRET');
-  const requestedOpenSkyMode = String(openSkyAuthMode || '').trim().toLowerCase();
-  const openSkyMode = OPENSKY_AUTH_MODES.has(requestedOpenSkyMode)
-    ? requestedOpenSkyMode
-    : OPENSKY_AUTH_MODE_DEFAULT;
-  const flights = openSkyMode === 'anon'
-    ? 'OpenSky keyless anonymous access (rate-limited)'
-    : openSkyMode === 'basic'
-      ? 'OpenSky Basic mode selected (credential presence and validity not verified)'
-      : openSkyMode === 'auto'
-        ? 'OpenSky auto mode selected (runtime credential choice and validity not verified)'
-        : hasOAuthCredentials
-          ? 'OpenSky OAuth credentials present (runtime mode and validity not verified)'
-          : 'OpenSky keyless anonymous access (rate-limited)';
   const route = selectMapStartupRoute({
     googleApiKey: configured('GOOGLE_MAPS_API_KEY') ? 'configured' : '',
     cesiumToken: configured('CESIUM_ION_TOKEN') ? 'configured' : '',
@@ -175,7 +127,7 @@ export function buildCapabilitySummary(
       : route === 'google-ion'
         ? 'Google Photorealistic 3D Tiles through Cesium ion; Bing and world-terrain stacks available'
         : 'Esri World Imagery (keyless satellite basemap) with keyless terrain',
-    flights,
+    flights: 'adsb.lol keyless regional feed',
     voice: configured('OPENAI_API_KEY')
       ? 'available'
       : 'off until an OpenAI key is added, or a Codex ChatGPT sign-in is selected in Provider Settings (experimental)',
@@ -208,9 +160,7 @@ export function inspectSetup({ includeKeychain = true, authoritativeEnvironment 
       : { available: false, version: null },
     dependenciesInstalled,
     credentials,
-    capabilities: buildCapabilitySummary(credentials, {
-      openSkyAuthMode: resolveOpenSkyAuthMode({ authoritativeEnvironment, rootDir }),
-    }),
+    capabilities: buildCapabilitySummary(credentials),
   };
 }
 

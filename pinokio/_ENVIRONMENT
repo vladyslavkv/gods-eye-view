@@ -17,8 +17,6 @@
 # AISSTREAM_API_KEY=
 # FIRMS_MAP_KEY=
 # TOMTOM_API_KEY=
-# OPENSKY_CLIENT_ID=
-# OPENSKY_CLIENT_SECRET=
 # LL2_API_TOKEN=
 
 # Keep sharing off. The current supported Pinokio release logs successful

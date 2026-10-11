@@ -140,7 +140,7 @@ test('HUD summary context and telemetry tag carry chip-identical feed-state', ()
       id: 'flights',
       name: 'Live Flights',
       enabled: true,
-      stats: { stale: true, count: 12, lastUpdate: now - 240_000, source: 'OpenSky Network' },
+      stats: { stale: true, count: 12, lastUpdate: now - 240_000, source: 'adsb.lol' },
     },
     {
       id: 'earthquakes',

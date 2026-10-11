@@ -119,7 +119,7 @@ export const aircraftInArea = defineTool({
       .map((record) => aircraftRow(record, center))
       .sort((a, b) => a.distance_km - b.distance_km);
     const kind = args.military ? 'military aircraft' : 'aircraft';
-    // A regional fallback feed covers only part of the world around the
+    // A regional feed covers only part of the world around the
     // area's center; say so rather than imply a worldwide answer.
     const regional = /regional/i.test(snapshot.coverage || '');
     const notes = [
@@ -188,8 +188,14 @@ export const findAircraft = defineTool({
         'unavailable',
         'The military aircraft feed is not available here',
       );
+    // The civil feed looks the identifier up worldwide; the military feed
+    // returns its whole snapshot and ignores the query.
+    const lookup =
+      key === 'registration'
+        ? {}
+        : { [key]: key === 'icao24' ? wanted.toLowerCase() : wanted };
     const settled = await Promise.allSettled(
-      feeds.map(({ feed }) => feed.getSnapshot({}, { signal })),
+      feeds.map(({ feed }) => feed.getSnapshot(lookup, { signal })),
     );
     signal?.throwIfAborted();
     // A search succeeds when any feed answers; missing feeds are named.

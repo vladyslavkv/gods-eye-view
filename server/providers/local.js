@@ -1,4 +1,4 @@
-import { openSkyProxy } from './aircraft/opensky.js';
+import { flightsProxy } from './aircraft/flights.js';
 import { celestrakProxy, rocketLaunchesProxy } from './space.js';
 import { tomtomProxy } from './traffic.js';
 import { firmsProxy } from './firms.js';
@@ -33,7 +33,7 @@ import { windProxy } from './wind.js';
  */
 function localProviderPlugins({ realtime } = {}) {
   return [
-    openSkyProxy(),
+    flightsProxy(),
     celestrakProxy(),
     tomtomProxy(),
     firmsProxy(),
@@ -81,7 +81,7 @@ export { LL2_CACHE_TTL_MS, launchLibraryRequestHeaders } from './space.js';
 export { googlePlacesContextProxy } from './places.js';
 export { googleServerApiKey } from './places.js';
 export { keylessGooglePlacesResponse } from './places.js';
-export { adsbLolFallbackAnchor } from './aircraft/opensky.js';
+export { adsbLolFallbackAnchor } from './aircraft/flights.js';
 export { readResponseTextCapped } from './common/http.js';
 export { readResponseJsonCapped } from './common/http.js';
 export { coalesceProxyRequest } from './common/http.js';

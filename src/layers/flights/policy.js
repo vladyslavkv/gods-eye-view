@@ -149,10 +149,10 @@ export const TRAIL_MAX_POINTS = 400;
 
 export const RENDER_DELAY_SEC = 30;
 
-/** @constant {number} Polls an aircraft may miss before removal (transient OpenSky dropouts). */
+/** @constant {number} Polls an aircraft may miss before removal (transient flights-feed dropouts). */
 
 // --- Landed-plane fast cull (owner field report 2026-07-02: "phantom" planes
-// lingered ~2 min at airports after touchdown). OpenSky's on_ground flag LAGS
+// lingered ~2 min at airports after touchdown). The flights feed's on_ground flag LAGS
 // the actual landing, so a landed plane's last airborne-classified fixes show
 // it low + slow on the runway; when such a plane then drops out of the poll,
 // it has landed (the feed reclassified it to ground traffic we filter out),
@@ -226,7 +226,7 @@ export const ENRICH_MAX_INFLIGHT = 4;
 export const ENRICH_DISPATCH_GAP_MS = 200;
 
 // ---------------------------------------------------------------------------
-// Ambient fleet type enrichment (2026-07-02 field data: OpenSky's live
+// Ambient fleet type enrichment (2026-07-02 field data: the flights feed's live
 // category field is 0/"no info" for ~94% of planes, so ambient classification
 // defaulted nearly the whole fleet to the airliner silhouette). Each poll,
 // ON-SCREEN planes — same horizon-occluder + frustum tests the fleet tick's
@@ -404,7 +404,7 @@ export const FLOOR_EASE_EPSILON_M = 0.02;
  *  Deleting the state outright was the first cut, and an owner sighting found
  *  what that costs: VIR138M at JFK, 45 kt down the runway, "clearly on good
  *  ground, then suddenly popped below the ground, then popped back up".
- *  OpenSky's `on_ground` flag is not clean through a rotation — it flaps — and
+ *  The feed's `on_ground` flag is not clean through a rotation — it flaps — and
  *  the fix's own height source switches at the same moment, from the resolved
  *  surface to baro + geoid N, which at a sea-level field IS the geoid and sits
  *  below the runway. A single airborne poll therefore wiped the only thing that

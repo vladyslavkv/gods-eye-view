@@ -144,9 +144,10 @@ test('the military feed is used on request and reported when missing', async () 
 });
 
 test('aircraft are found by exactly one identifier across feeds', async () => {
+  const civilFeed = feed(civil);
   const catalog = composeCatalog({
     tools: coreTools,
-    services: { aircraft: feed(civil), military: feed(military) },
+    services: { aircraft: civilFeed, military: feed(military) },
   });
   const byCallsign = await catalog.call('find_aircraft', {
     callsign: 'ual123',
@@ -157,6 +158,7 @@ test('aircraft are found by exactly one identifier across feeds', async () => {
     ['aaa111'],
   );
   assert.equal(byCallsign.data.rows[0].distance_km, undefined);
+  assert.deepEqual(civilFeed.calls[0], { callsign: 'UAL123' });
   const byRegistration = await catalog.call('find_aircraft', {
     registration: '07-7175',
   });
@@ -165,6 +167,7 @@ test('aircraft are found by exactly one identifier across feeds', async () => {
     ['ae0001'],
   );
   const none = await catalog.call('find_aircraft', { icao24: 'ABCDEF' });
+  assert.deepEqual(civilFeed.calls.at(-1), { icao24: 'abcdef' });
   assert.equal(
     none.summary,
     'No aircraft with icao24 ABCDEF is currently reported.',
@@ -218,7 +221,7 @@ test('tracks are ordered and thinned to 200 points', async () => {
   const failing = (status) => ({
     getSnapshot: async () => snapshot([]),
     getTrack: async () => {
-      throw new LiveSourceError('unavailable', `OpenSky HTTP ${status}`, {
+      throw new LiveSourceError('unavailable', `Flights HTTP ${status}`, {
         status,
       });
     },
@@ -280,7 +283,7 @@ test('aircraft info combines type and route lookups', async () => {
 test('live source failures become tool errors with retry guidance', async () => {
   const limited = {
     getSnapshot: async () => {
-      throw new LiveSourceError('limited', 'OpenSky rate limited', {
+      throw new LiveSourceError('limited', 'Flights rate limited', {
         retryAfterMs: 45000,
       });
     },
@@ -295,14 +298,14 @@ test('live source failures become tool errors with retry guidance', async () => 
       error.name === 'ToolError' &&
       error.code === 'retry_later' &&
       error.retryAfterSeconds === 45 &&
-      error.message === 'OpenSky rate limited',
+      error.message === 'Flights rate limited',
   );
 });
 
 test('aircraft searches keep the feeds that answered and name the others', async () => {
   const down = {
     getSnapshot: async () => {
-      throw new LiveSourceError('unavailable', 'OpenSky HTTP 503');
+      throw new LiveSourceError('unavailable', 'Flights HTTP 503');
     },
   };
   const military = feed([
@@ -334,14 +337,14 @@ test('aircraft searches keep the feeds that answered and name the others', async
       services: { aircraft: down, military: down },
     }).call('find_aircraft', { callsign: 'RCH123' }),
     (error) =>
-      error.code === 'unavailable' && error.message === 'OpenSky HTTP 503',
+      error.code === 'unavailable' && error.message === 'Flights HTTP 503',
   );
 });
 
-test('a regional fallback feed is named in the answer', async () => {
+test('a regional feed is named in the answer', async () => {
   const regional = feed([record('abc123', 37.6, -122.3)], {
     source: 'adsb.lol',
-    coverage: '250nm regional fallback',
+    coverage: '250nm regional',
   });
   const result = await composeCatalog({
     tools: coreTools,
@@ -349,7 +352,7 @@ test('a regional fallback feed is named in the answer', async () => {
   }).call('aircraft_in_area', {
     area: { lat: 37.6, lon: -122.3, radius_km: 20 },
   });
-  assert.match(result.summary, /\(regional feed: 250nm regional fallback\)\.$/);
+  assert.match(result.summary, /\(regional feed: 250nm regional\)\.$/);
 });
 
 test('aircraft searches say when a feed that answered is stale', async () => {
@@ -372,18 +375,18 @@ test('aircraft searches say when a feed that answered is stale', async () => {
   );
 });
 
-test('the real OpenSky source marks an hour-old snapshot stale for searches', async () => {
+test('the real flights source marks an hour-old snapshot stale for searches', async () => {
   const { createFlightSource } =
     await import('../../sources/live/standalone.js');
   const now = Date.UTC(2026, 0, 1, 12);
-  const opensky = createFlightSource({
+  const flights = createFlightSource({
     now: () => now,
     fetchImpl: async () =>
       Response.json({ time: now / 1000 - 3600, states: [] }),
   });
   const result = await composeCatalog({
     tools: coreTools,
-    services: { aircraft: opensky },
+    services: { aircraft: flights },
   }).call('find_aircraft', { callsign: 'UAL1' });
   assert.deepEqual(result.data.stale_feeds, ['civil']);
   assert.match(result.summary, /may be stale\.$/);

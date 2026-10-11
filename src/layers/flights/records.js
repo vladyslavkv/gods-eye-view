@@ -48,7 +48,7 @@ export class FlightRecords {
 
     const onGround = on_ground === true;
     this.missingPolls.delete(icao24);
-    // Sticky merge: OpenSky intermittently drops callsign/velocity/track for
+    // Sticky merge: the flights feed intermittently drops callsign/velocity/track for
     // aircraft it still positions — hold last-known-good instead of
     // regressing to the ICAO hex / a 0° (north) heading. Bounded by the
     // MISSING_POLL_LIMIT eviction below, which deletes the whole entry.
@@ -60,7 +60,7 @@ export class FlightRecords {
     // route-plausibility, and follow-camera range heuristics. It is
     // NEVER overwritten or renamed. Where the aircraft actually RENDERS
     // on the ellipsoidal globe is a SEPARATE value (renderAltitudeM,
-    // below) — geo_altitude when OpenSky reports it (already WGS84
+    // below) — geo_altitude when the feed reports it (already WGS84
     // ellipsoidal), else baro+geoid as a visual fallback, else ground
     // surface when parked. `Cartesian3.fromDegrees` gets renderAltitudeM,
     // never `alt` directly.
@@ -170,7 +170,7 @@ export class FlightRecords {
     // ground so it can never dive below the mesh. Round 3 (Austin
     // fleet-underground): baro can read BELOW an elevated field — SWA696
     // showed 450 ft at Austin's 542 ft field elevation — and rollout/taxi
-    // traffic that OpenSky hasn't flagged on_ground yet renders from that
+    // traffic that the flights feed hasn't flagged on_ground yet renders from that
     // baro, so the whole fleet sat buried at AUS in 2D. Clamping every
     // global contact would need unbounded terrain resolution; instead the
     // clamp covers the TRACKED contact (always) plus every low contact
@@ -215,18 +215,18 @@ export class FlightRecords {
       velocity: stickyNumber(velocity, prevMeta?.velocity, 0),
       true_track: stickyNumber(true_track, prevMeta?.true_track, 0),
       category: cat,
-      // An adsbdb-enriched type code outranks the coarse OpenSky category.
+      // An adsbdb-enriched type code outranks the coarse emitter category.
       klass: classifyAircraft({
         typeCode: prevMeta?.typeCode ?? null,
         category: cat,
       }),
       turnRateDps: prevMeta?.turnRateDps || 0,
       verticalRate: stickyNumber(vertical_rate, prevMeta?.verticalRate, null),
-      // Analyst seam: OpenSky origin_country (state[2]) — additive, sticky
+      // Analyst seam: state-vector origin_country (state[2]) — additive, sticky
       // like callsign so a transient blank row doesn't blank the field.
       originCountry:
         stickyText(origin_country, prevMeta?.originCountry) || null,
-      // OpenSky distinguishes the last position epoch from the last
+      // The state vector distinguishes the last position epoch from the last
       // transponder message. The fleet coast horizon uses this actual
       // contact time so a temporarily old position does not hard-freeze
       // while fresh velocity/track messages are still arriving.
@@ -241,7 +241,7 @@ export class FlightRecords {
       registration: prevMeta?.registration ?? null,
       airline: prevMeta?.airline ?? null,
       route: prevMeta?.route ?? null,
-      // The RAW poll fix lat/lon (this tick's OpenSky state-vector
+      // The RAW poll fix lat/lon (this tick's state-vector
       // coords, pre-dead-reckon) — kept distinct from the continuously
       // dead-reckoned billboard position for any consumer that needs the
       // actual reported fix.

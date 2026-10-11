@@ -48,7 +48,7 @@ test('layerFeedState matches the chip classifier for every honesty class', () =>
   );
   assert.equal(
     layerFeedState({ source: 'adsb.lol', count: 10, lastUpdate: 1 }),
-    'fallback',
+    'nominal',
   );
   assert.equal(
     layerFeedState({
@@ -113,12 +113,12 @@ test('a disabled layer is off even when leftover stats would read stale', () => 
       id: 'flights',
       name: 'Live Flights',
       enabled: false,
-      source: 'OpenSky Network',
+      source: 'adsb.lol',
       stats: {
         stale: true,
         count: 12,
         lastUpdate: NOW - 240_000,
-        source: 'OpenSky Network',
+        source: 'adsb.lol',
       },
     },
     { now: NOW },
@@ -139,19 +139,19 @@ test('an enabled stale layer carries age, source, and a mechanical note', () => 
         stale: true,
         count: 12,
         lastUpdate: NOW - 240_000,
-        source: 'OpenSky Network',
+        source: 'adsb.lol',
       },
     },
     { now: NOW },
   );
   assert.equal(snap.feedState, 'stale');
-  assert.equal(snap.source, 'OpenSky Network');
+  assert.equal(snap.source, 'adsb.lol');
   assert.equal(snap.ageSec, 240);
   assert.equal(snap.ageLabel, '4m ago');
   const envelope = feedProvenanceEnvelope([snap], { now: NOW });
   assert.equal(envelope.overall, 'stale');
   assert.match(envelope.note, /Live Flights is STALE/);
-  assert.match(envelope.note, /OpenSky Network/);
+  assert.match(envelope.note, /adsb\.lol/);
   assert.match(envelope.note, /4m ago/);
   assert.match(envelope.note, /do not describe this as live/i);
 });
@@ -228,7 +228,7 @@ test('view-state rows keep the existing identity fields and add feedState', () =
         count: 9,
         lastUpdate: 42,
         error: null,
-        source: 'OpenSky Network',
+        source: 'adsb.lol',
       },
     },
     { now: NOW },
@@ -240,7 +240,7 @@ test('view-state rows keep the existing identity fields and add feedState', () =
     count: 9,
     error: null,
     feedState: 'nominal',
-    source: 'OpenSky Network',
+    source: 'adsb.lol',
     lastUpdate: 42,
   });
 });

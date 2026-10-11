@@ -10,7 +10,7 @@
 //   finite(baroAltM)             -> baroAltM + (geoidN ?? 0)
 //   else                         -> fallback (caller's existing sticky default)
 //
-// baro+N is a visual FALLBACK, not geometric truth (OpenSky geo_altitude is
+// baro+N is a visual FALLBACK, not geometric truth (feed geo_altitude is
 // the real WGS84 ellipsoidal value; barometric altitude is MSL-referenced
 // and additionally subject to non-standard-pressure QNH error) — no test
 // here asserts baro+N is exact, only that it matches the documented formula.

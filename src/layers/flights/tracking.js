@@ -366,7 +366,7 @@ export function createTracking({
   /**
    * Start the trail for a newly tracked aircraft: seed it with the short
    * dead-reckoning history (chronological), render immediately, then
-   * fire-and-forget an OpenSky track backfill.
+   * fire-and-forget an adsb.lol trace backfill.
    * @param {string} icao24 - ICAO 24-bit transponder address being tracked.
    */
 
@@ -464,7 +464,7 @@ export function createTracking({
   }
 
   /**
-   * Fire-and-forget OpenSky /tracks backfill (PRD F1). On success, splices
+   * Fire-and-forget adsb.lol trace backfill (PRD F1). On success, splices
    * waypoints strictly older than the oldest seeded fix AHEAD of the locally
    * accumulated fine segment, capped at TRAIL_MAX_POINTS (newest kept). Any
    * failure (404/429/timeout/malformed) silently keeps the local-only trail.
@@ -497,9 +497,8 @@ export function createTracking({
     )
       return;
 
-    // OpenSky track waypoints: [time, latitude, longitude, baro_altitude, true_track, on_ground]
-    // Height-datum fix (Task 6): /tracks only ever reports barometric/MSL altitude
-    // (no per-waypoint geo_altitude in this endpoint), so waypoint render height is
+    // Trace waypoints carry barometric/MSL altitude only (no per-waypoint
+    // geo_altitude), so waypoint render height is
     // the documented visual FALLBACK baroM + geoidHeight(waypointLat, waypointLon)
     // — geometrically approximate, not exact, same honesty caveat as the live
     // baro-fallback branch of pickRenderAltitudeM.
@@ -687,7 +686,7 @@ export function createTracking({
    * Whether the Military layer suppresses this civil duplicate right now.
    *
    * The dedicated Military layer owns icon/track/click for known-military
-   * contacts, so the OpenSky duplicate is dropped while that layer is on. Two
+   * contacts, so the flights-feed duplicate is dropped while that layer is on. Two
    * contacts are exempt, both for the same reason — this layer still owns them:
    *
    *   - the CURRENTLY tracked one, which hands off on untrack; and
@@ -1072,7 +1071,7 @@ export function createTracking({
    *  - activated  → suppress known-military billboards NOW (mirror of the
    *    poll-time branch, tracked aircraft excluded — it hands off on untrack);
    *  - deactivated → the suppressed aircraft's state was deleted, so bring the
-   *    next OpenSky poll forward instead of waiting out the interval (update()
+   *    next flights poll forward instead of waiting out the interval (update()
    *    itself still honors _retryAt backoff).
    *
    * @param {boolean} active - New military-layer active state.

@@ -50,7 +50,7 @@
  *   LOW-SPEED (heading-v2, 2026-07-03 field-test regression) — two extra
  *   flights-layer scenarios that the fast turning planes cannot catch:
  *
- *   Phase 3 — HOVERING HELICOPTER (klass=helicopter via OpenSky category 8):
+ *   Phase 3 — HOVERING HELICOPTER (klass=helicopter via emitter category 8):
  *   position drifts a few metres (smooth pseudo-random GPS walk), reported
  *   track flips ±45° around 90° (the velocity-vector noise a hovering
  *   transponder actually emits), velocity 1 m/s. Assertions:
@@ -222,7 +222,7 @@ const TURN = {
   // baseTrack every ~trackFlipSec/2 (hover velocity-vector noise), category 8
   // classifies it klass=helicopter at ingest. The slow plane reuses the circle
   // math: R=184.2 m at 4°/s ⇒ ground speed R·ω = 12.86 m/s ≈ 25 kt; category 2
-  // (light). Both served by the flights (OpenSky) shim branch.
+  // (light). Both served by the flights shim branch.
   hover: { icao: 'aaa010', callsign: 'HOVER1', cLon: -97.7431, cLat: 30.2672, altM: 450, driftAmpM: 4, baseTrack: 90, trackFlipSec: 29, category: 8 },
   slow: { icao: 'aaa011', callsign: 'SLOW25', cLon: -97.7000, cLat: 30.2300, radiusM: 184.2, alphaDeg0: 0, turnDps: 4, altM: 900, category: 2 },
   // Phase 5 (course-handoff consistency): 65 kt helicopter in a wide orbit —
@@ -482,7 +482,7 @@ async function main() {
     await page.evaluateOnNewDocument((turn) => {
       window.__TURN = turn;
       window.__TURN.epochMs = Date.now(); // arc phase zero = shim install time
-      window.__TURN_HITS = { opensky: 0, mil: 0 };
+      window.__TURN_HITS = { flights: 0, mil: 0 };
 
       const norm360 = (d) => ((d % 360) + 360) % 360;
       // Same arc math as the Node side (keep in sync with arcState()).
@@ -530,7 +530,7 @@ async function main() {
           return Promise.resolve(jsonResponse({ timestamp: Math.floor(nowSec), trace: [] }));
         }
         if (url.includes('/api/flights')) {
-          T.__hitsGuard = ++window.__TURN_HITS.opensky;
+          T.__hitsGuard = ++window.__TURN_HITS.flights;
           const row = (id, callsign, s, altM, category) => [
             id, callsign, 'Synthetica',
             Math.floor(nowSec),        // 3 time_position — the fix epoch the layer stamps history with
@@ -562,7 +562,7 @@ async function main() {
           });
           return Promise.resolve(jsonResponse({ msg: 'No error', now: Date.now(), ac }));
         }
-        // Classification is supplied by the synthetic OpenSky category, so the
+        // Classification is supplied by the synthetic emitter category, so the
         // best-effort ADSBDB enrichment has no bearing on this scenario. Stub
         // it rather than letting one unrelated public-provider 502 turn a
         // renderer/heading result into a console-cleanliness false negative.
@@ -711,7 +711,7 @@ async function main() {
       window.__TURN_DRIVER = setInterval(() => { fl.update(v); mil.update(v); }, 15000);
       return { fl: fl.getStats().count, mil: mil.getStats().count, hits: window.__TURN_HITS };
     });
-    console.log(`  flights count=${primed.fl} military count=${primed.mil} | shim hits opensky=${primed.hits.opensky} mil=${primed.hits.mil}`);
+    console.log(`  flights count=${primed.fl} military count=${primed.mil} | shim hits flights=${primed.hits.flights} mil=${primed.hits.mil}`);
     record('inject: turning synthetic planes ingested (both layers)', primed.fl > 0 && primed.mil > 0,
       `flights=${primed.fl} military=${primed.mil}`);
     if (!(primed.fl > 0 && primed.mil > 0)) { finish(); return; }

@@ -76,7 +76,7 @@
  *      value.
  *
  * Upstream-dependent assertions (live Re:Earth `/api/terrain/heights`, live
- * OpenSky aircraft) are marked INCONCLUSIVE — not FAIL — when the upstream
+ * flights-feed aircraft) are marked INCONCLUSIVE — not FAIL — when the upstream
  * is unreachable this run, mirroring qa-cctv-v2's tiles-timeout handling.
  * GL-dependent tile settling (the Google-3D one-shot ground snap actually
  * completing under headless SwiftShader) is likewise inconclusive-on-timeout.
@@ -466,7 +466,7 @@ async function main() {
       if (!entry.enabled) await dm.toggle('flights');
     });
 
-    // OpenSky polls on its own interval; give it real time to land a batch
+    // The flights feed polls on its own interval; give it real time to land a batch
     // (the layer polls every ~30s per the documented polling invariant).
     const gotAircraft = await page.waitForFunction(
       () => {
@@ -477,8 +477,8 @@ async function main() {
     ).then(() => true).catch(() => false);
 
     if (!gotAircraft) {
-      record('>=10 live aircraft sampled from OpenSky', null,
-        'no aircraft appeared within 45s — OpenSky upstream INCONCLUSIVE this run (not an app failure)');
+      record('>=10 live aircraft sampled from the flights feed', null,
+        'no aircraft appeared within 45s — flights upstream INCONCLUSIVE this run (not an app failure)');
     } else {
       // Let a full second poll cycle land (updateInterval: 30000 — see
       // flights.js) before sampling. A just-appeared ON-GROUND aircraft can
@@ -518,7 +518,7 @@ async function main() {
 
       const sampleSize = Math.min(allPositions.length, 25);
       const sample = allPositions.slice(0, sampleSize);
-      record(`>=10 live aircraft sampled from OpenSky (public getAllPositions/getNearby)`,
+      record(`>=10 live aircraft sampled from the flights feed (public getAllPositions/getNearby)`,
         sample.length >= 10 ? true : (sample.length > 0 ? null : false),
         `sampled ${sample.length} (getAllPositions total=${allPositions.length})`);
 

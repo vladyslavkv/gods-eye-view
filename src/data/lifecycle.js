@@ -174,7 +174,7 @@ export class LayerLifecycle {
       // a second toggle during the awaited init()/first-update() of the first
       // interleaves: the disable branch runs while enable is mid-flight, the
       // interval is armed after the user already turned the layer off, and a
-      // subsequent enable arms a SECOND interval → 2× poll → OpenSky 429 (M1).
+      // subsequent enable arms a SECOND interval → 2× poll → upstream 429 (M1).
       toggleChain: Promise.resolve(),
     });
   }

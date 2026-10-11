@@ -1,7 +1,7 @@
 // src/data/renderAltitude.js — pure priority-chain helper for aircraft render
 // altitude (docs/plans/2026-07-05-entity-height-datum-fix.md Task 6).
 //
-// The globe needs ELLIPSOIDAL height (h = H + N). OpenSky's `geo_altitude`
+// The globe needs ELLIPSOIDAL height (h = H + N). The feed's `geo_altitude`
 // (state-vector index 13) is already WGS84 geometric/ellipsoidal — the
 // correct value to hand `Cartesian3.fromDegrees(lon, lat, h)` verbatim.
 // `baro_altitude` (index 7) is barometric/MSL-referenced (and, unlike a true
@@ -17,9 +17,9 @@
 
 /**
  * @param {object} params
- * @param {number|null|undefined} params.geoAltM - OpenSky geo_altitude (m, WGS84 ellipsoidal), if reported.
+ * @param {number|null|undefined} params.geoAltM - feed geo_altitude (m, WGS84 ellipsoidal), if reported.
  * @param {number|null|undefined} params.baroAltM - Barometric/MSL altitude (m), if reported.
- * @param {boolean} params.onGround - OpenSky on_ground flag.
+ * @param {boolean} params.onGround - feed on_ground flag.
  * @param {number|null|undefined} params.surfaceM - Cached ellipsoidal ground height at this lat/lon (Task 3's cachedEllipsoidalGround), if warm.
  * @param {number|null|undefined} [params.geoidN] - Geoid undulation N (m) at this lat/lon; treated as 0 when absent.
  * @returns {number|null} Ellipsoidal render height in metres, or `null` (sentinel) when

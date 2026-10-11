@@ -29,7 +29,7 @@ import {
   initTrackedReadout,
 } from './trackedReadout.js';
 
-test('share-Follow absence requires an accepted OpenSky snapshot', async () => {
+test('share-Follow absence requires an accepted flights snapshot', async () => {
   _setFlightTrackingRefreshOutcomeForTest({ status: 'source-unavailable' });
   assert.equal(
     (await flightsLayer.resolveTrackingRestoreTarget('abc123')).status,
@@ -175,7 +175,7 @@ test('flights first update forwards caller cancellation into the feed request', 
   }
 });
 
-test('nonempty OpenSky payload with zero usable rows cannot prove share target absence', async () => {
+test('nonempty flights payload with zero usable rows cannot prove share target absence', async () => {
   _setTrackedFlightRefreshStateForTest({
     icao24: 'abc123',
     entity: { gevLabelModel: { title: 'WARM', details: [] } },
@@ -203,7 +203,7 @@ test('nonempty OpenSky payload with zero usable rows cannot prove share target a
     assert.equal(resolution.status, 'source-unavailable');
     assert.match(
       flightsLayer.getStats().error,
-      /Malformed OpenSky aircraft rows/,
+      /Malformed Flights aircraft rows/,
     );
     assert.equal(
       flightsLayer.getAnalystRecords().length,
@@ -342,13 +342,13 @@ test('flights poll refreshes tracked callsign/FL/kts and marks a missed poll STA
 
   const realFetch = globalThis.fetch;
   const nowSec = Math.floor(Date.now() / 1000);
-  let openskyPoll = 0;
+  let flightsPoll = 0;
   globalThis.fetch = async (url) => {
     if (!String(url).startsWith('/api/flights')) {
       return { ok: true, status: 200, json: async () => ({ ac: [] }) };
     }
     const states =
-      openskyPoll++ === 0
+      flightsPoll++ === 0
         ? [
             [
               icao24,
@@ -1559,7 +1559,7 @@ test('display floor: an on_ground FLAP mid-takeoff-roll never dips below the run
   _clearMeshFloorCellsForTest();
   setMeshFloorPreferred(true);
   // JFK: ~4 m MSL field, geoid N ~ -32.5 m, so the runway is ~-28.5 m
-  // ellipsoidal and the geoid is 4 m UNDER it. OpenSky's on_ground flag flaps
+  // ellipsoidal and the geoid is 4 m UNDER it. the flights feed's on_ground flag flaps
   // through a rotation, and at the same moment the fix's height source switches
   // from the resolved surface to baro + geoid N — which at a sea-level field IS
   // the geoid. Deleting the hold on the airborne poll made that switch visible:

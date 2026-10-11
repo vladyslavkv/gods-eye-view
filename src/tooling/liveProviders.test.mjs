@@ -51,7 +51,7 @@ function environment(t, values) {
 
 test('live entry resolves in Node and aircraft normalization stays independently portable', async () => {
   const entry = await import('gods-eye-view/server/providers/live');
-  assert.equal(entry.openSkyProxy, providers.openSkyProxy);
+  assert.equal(entry.flightsProxy, providers.flightsProxy);
   assert.equal(entry.aisLiveProxy, providers.aisLiveProxy);
   const normalizer = await import('gods-eye-view/sources/adsb-lol');
   assert.equal(
@@ -60,137 +60,73 @@ test('live entry resolves in Node and aircraft normalization stays independently
   );
 });
 
-test('OpenSky state and track routes share tokens, retain cache and use regional fallback', async (t) => {
-  environment(t, {
-    OPENSKY_CLIENT_ID: 'fixture-client',
-    OPENSKY_CLIENT_SECRET: 'fixture-secret',
-    OPENSKY_AUTH_MODE: 'oauth',
-    OPENSKY_USERNAME: undefined,
-    OPENSKY_PASSWORD: undefined,
-  });
+test('flights route reads adsb.lol by region, callsign or address and never contacts another host', async (t) => {
   let now = Date.now();
   t.mock.method(Date, 'now', () => now);
-  t.mock.method(console, 'log', () => {});
+  t.mock.method(console, 'warn', () => {});
   const calls = [];
   t.mock.method(globalThis, 'fetch', async (url, options) => {
-    calls.push({ url, options });
-    if (url.includes('/token'))
-      return Response.json({ access_token: 'fixture-token', expires_in: 1800 });
-    if (url.includes('/states/')) {
-      assert.equal(options.headers.Authorization, 'Bearer fixture-token');
-      return Response.json({ time: Math.floor(now / 1000), states: [] });
-    }
-    if (url.includes('/tracks/')) {
-      assert.equal(options.headers.Authorization, 'Bearer fixture-token');
-      return Response.json({ path: [] });
-    }
-    if (url.includes('/lat/'))
-      return Response.json({
-        now: now / 1000,
-        ac: [{ hex: 'abc123', lat: 30, lon: -97, alt_baro: 10000 }],
-      });
-    throw Error(`Unexpected URL: ${url}`);
+    calls.push(url);
+    assert.equal(new URL(url).hostname, 'api.adsb.lol');
+    assert.ok(options.signal instanceof AbortSignal);
+    return Response.json({
+      now: now / 1000,
+      ac: [{ hex: 'abc123', flight: 'UAL1', lat: 30, lon: -97, alt_baro: 10000 }],
+    });
   });
-  const states = install(providers.openSkyProxy());
-  assert.equal(
-    (await states('/api/flights', '?lat=30&lon=-97')).statusCode,
-    200,
+  const fresh = await import(
+    `../../server/providers/aircraft/flights.js?route=${Math.random()}`
   );
-  assert.equal(
-    (await states('/api/flights', '?lat=30&lon=-97')).headers[
-      'x-opensky-cache'
-    ],
-    'HIT',
-  );
-  assert.equal(calls.length, 2);
+  const flights = install(fresh.flightsProxy(), true);
+  const regional = await flights('/api/flights', '?lat=30.1&lon=-97.1');
+  assert.equal(regional.statusCode, 200);
+  assert.equal(regional.headers['x-flight-source'], 'adsb.lol');
+  assert.equal(regional.headers['x-flight-coverage'], '250nm regional');
+  assert.equal(JSON.parse(regional.body).states[0][0], 'abc123');
+  assert.equal(calls.at(-1), 'https://api.adsb.lol/v2/lat/30/lon/-97/dist/250');
+  const cached = await flights('/api/flights', '?lat=30&lon=-97');
+  assert.equal(cached.headers['x-feed-cache'], 'HIT');
+  assert.equal(calls.length, 1);
+  const byCallsign = await flights('/api/flights', '?callsign=ual1');
+  assert.equal(byCallsign.headers['x-flight-coverage'], 'worldwide callsign lookup');
+  assert.equal(calls.at(-1), 'https://api.adsb.lol/v2/callsign/UAL1');
+  await flights('/api/flights', '?icao24=ABC123');
+  assert.equal(calls.at(-1), 'https://api.adsb.lol/v2/hex/abc123');
+  for (const query of ['', '?lat=95&lon=0', '?callsign=x', '?icao24=xyz'])
+    assert.equal((await flights('/api/flights', query)).statusCode, 400, query);
+  assert.equal(calls.length, 3);
+  now += 13_000;
+  t.mock.method(globalThis, 'fetch', async () => new Response('', { status: 503 }));
+  const stale = await flights('/api/flights', '?lat=30&lon=-97');
+  assert.equal(stale.statusCode, 200);
+  assert.equal(stale.headers['x-feed-cache'], 'STALE');
+  const down = await flights('/api/flights', '?lat=-30&lon=20');
+  assert.equal(down.statusCode, 502);
+});
+
+test('flight track backfill reads the adsb.lol trace for the address', async (t) => {
+  const calls = [];
+  t.mock.method(globalThis, 'fetch', async (url) => {
+    calls.push(url);
+    return Response.json({ timestamp: 1, trace: [] });
+  });
   const tracks = install(providers.trackBackfillProxies(), true);
   assert.equal(
-    (await tracks('/api/flights/track', '?icao24=ABC123')).statusCode,
+    (await tracks('/api/flights/track', '?icao24=ABC124')).statusCode,
     200,
   );
-  await tracks('/api/flights/track', '?icao24=abc123');
-  assert.equal(calls.filter((call) => call.url.includes('/token')).length, 1);
-  assert.equal(calls.filter((call) => call.url.includes('/tracks/')).length, 1);
+  await tracks('/api/flights/track', '?icao24=abc124');
+  assert.deepEqual(calls, [
+    'https://adsb.lol/data/traces/24/trace_full_abc124.json',
+  ]);
+  assert.equal(
+    (await tracks('/api/flights/track', '?icao24=xyz')).statusCode,
+    400,
+  );
   assert.equal(
     (await tracks('/api/military/track', '?hex=invalid')).statusCode,
     400,
   );
-  now += 130_000;
-  t.mock.method(globalThis, 'fetch', async (url) => {
-    if (url.includes('/states/')) return new Response('', { status: 503 });
-    if (url.includes('/lat/'))
-      return Response.json({
-        now: now / 1000,
-        ac: [{ hex: 'abc123', lat: 30, lon: -97, alt_baro: 10000 }],
-      });
-    throw Error(`Unexpected URL: ${url}`);
-  });
-  // A fresh request without a usable cached worldwide frame should use the regional feed.
-  const fresh = await import(
-    `../../server/providers/aircraft/opensky.js?fallback=${now}`
-  );
-  process.env.OPENSKY_AUTH_MODE = 'anon';
-  const fallback = await install(fresh.openSkyProxy())(
-    '/api/flights',
-    '?lat=30&lon=-97',
-  );
-  assert.equal(fallback.statusCode, 200);
-  assert.equal(fallback.headers['x-flight-source'], 'adsb.lol');
-  assert.equal(JSON.parse(fallback.body).states[0][0], 'abc123');
-});
-
-test('OpenSky global snapshot attempts are time-limited, retried once, then fall back', async (t) => {
-  environment(t, {
-    OPENSKY_CLIENT_ID: undefined,
-    OPENSKY_CLIENT_SECRET: undefined,
-    OPENSKY_AUTH_MODE: 'anon',
-    OPENSKY_USERNAME: undefined,
-    OPENSKY_PASSWORD: undefined,
-  });
-  t.mock.method(console, 'warn', () => {});
-  const timedOut = () =>
-    Promise.reject(
-      new DOMException(
-        'The operation was aborted due to timeout',
-        'TimeoutError',
-      ),
-    );
-  const load = async (respond) => {
-    const attempts = [];
-    t.mock.method(globalThis, 'fetch', async (url, options) => {
-      if (url.includes('/states/')) {
-        assert.ok(options.signal instanceof AbortSignal);
-        attempts.push(url);
-        return respond(attempts.length);
-      }
-      if (url.includes('/lat/'))
-        return Response.json({
-          now: Date.now() / 1000,
-          ac: [{ hex: 'abc123', lat: 30, lon: -97, alt_baro: 10000 }],
-        });
-      throw Error(`Unexpected URL: ${url}`);
-    });
-    const fresh = await import(
-      `../../server/providers/aircraft/opensky.js?timeout=${Math.random()}`
-    );
-    const response = await install(fresh.openSkyProxy())(
-      '/api/flights',
-      '?lat=30&lon=-97',
-    );
-    return { response, attempts };
-  };
-  const recovered = await load((attempt) =>
-    attempt === 1
-      ? timedOut()
-      : Response.json({ time: Math.floor(Date.now() / 1000), states: [] }),
-  );
-  assert.equal(recovered.attempts.length, 2);
-  assert.equal(recovered.response.statusCode, 200);
-  assert.equal(recovered.response.headers['x-flight-source'], undefined);
-  const stalled = await load(() => timedOut());
-  assert.equal(stalled.attempts.length, 2);
-  assert.equal(stalled.response.statusCode, 200);
-  assert.equal(stalled.response.headers['x-flight-source'], 'adsb.lol');
 });
 
 test('military aircraft route preserves fresh cache and stale response after upstream failure', async (t) => {
@@ -430,7 +366,7 @@ test('track backfill proxy returns 502 on an oversized upstream body and caches 
   });
 
   // Cached as a 502 (never a 200): a retry inside the window neither
-  // reads as an empty track nor spends OpenSky credits on another download.
+  // reads as an empty track nor spends another upstream download.
   const res2 = await tracks('/api/flights/track', '?icao24=def456');
   assert.equal(res2.statusCode, 502);
   assert.equal(callCount, 1);

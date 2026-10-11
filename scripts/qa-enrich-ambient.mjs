@@ -3,7 +3,7 @@
  * qa-enrich-ambient.mjs — headless proof for AMBIENT fleet type enrichment
  * (fleet-enrichment widening of skylight Task 14).
  *
- * Field data (2026-07-02): OpenSky's live category field is 0/"no info" for
+ * Field data (2026-07-02): the flights feed's live category field is 0/"no info" for
  * ~94% of planes, so ambient classification defaulted nearly the whole fleet
  * to the airliner silhouette. This harness reproduces exactly that case —
  * 12 synthetic planes, ALL category 0 — and proves that the per-poll

@@ -6,8 +6,8 @@ import {
   finite,
 } from './contract.js';
 
-/** Normalize the OpenSky state-vector route, including its regional fallback. */
-export function normalizeOpenSkyAircraft(row) {
+/** Normalize one state-vector row of the flights route (adsb.lol, normalized server-side). */
+export function normalizeStateVectorAircraft(row) {
   if (!Array.isArray(row)) return null;
   const id = cleanText(row[0]).toLowerCase();
   if (!id || !coordinates(row[6], row[5])) return null;
@@ -71,19 +71,19 @@ export function normalizeReadsbAircraft(row, snapshotTimeMs) {
   };
 }
 
-export function openSkySnapshot(
+export function stateVectorSnapshot(
   payload,
   {
-    source = 'OpenSky Network',
-    coverage = 'worldwide upstream snapshot',
+    source = 'adsb.lol',
+    coverage = 'upstream snapshot',
     now = Date.now(),
     stale = false,
   } = {},
 ) {
   const admitted = admitRecords(
     payload?.states,
-    normalizeOpenSkyAircraft,
-    'OpenSky',
+    normalizeStateVectorAircraft,
+    'Flights',
   );
   const observedAtMs = epoch(payload?.time, 1000);
   const ageMs = observedAtMs == null ? null : Math.max(0, now - observedAtMs);
@@ -130,11 +130,11 @@ export function readsbSnapshot(
   };
 }
 
-/** Track altitude remains barometric; renderers choose a visual ground fallback. */
-export function normalizeAircraftTrack(
-  rows,
-  { baseTimeMs = 0, readsb = false } = {},
-) {
+/**
+ * Normalize readsb trace rows (`[offsetSec, lat, lon, altFt|'ground', ...]`).
+ * Track altitude remains barometric; renderers choose a visual ground fallback.
+ */
+export function normalizeAircraftTrack(rows, { baseTimeMs = 0 } = {}) {
   if (!Array.isArray(rows)) return [];
   return rows.flatMap((row) => {
     if (!Array.isArray(row)) return [];
@@ -155,12 +155,9 @@ export function normalizeAircraftTrack(
         latitude,
         longitude,
         observedAtMs,
-        baroAltitudeM:
-          altitude == null ? null : altitude * (readsb ? 0.3048 : 1),
+        baroAltitudeM: altitude == null ? null : altitude * 0.3048,
         ellipsoidAltitudeM: null,
-        onGround: readsb
-          ? cleanText(row[3]).toLowerCase() === 'ground'
-          : row[5] === true,
+        onGround: cleanText(row[3]).toLowerCase() === 'ground',
       },
     ];
   });

@@ -46,9 +46,6 @@ test('real dev and built-preview servers serve provider JSON and terminate unkno
     GOOGLE_MAPS_SERVER_API_KEY: '',
     MAPILLARY_CLIENT_TOKEN: '',
     OPENAI_API_KEY: '',
-    OPENSKY_AUTH_MODE: 'anon',
-    OPENSKY_CLIENT_ID: '',
-    OPENSKY_CLIENT_SECRET: '',
     CCTV_FORCE_AUSTIN: '0',
     CCTV_SOURCES_FILE: path.join(root, 'absent.json'),
     CCTV_SOURCES_JSON: JSON.stringify([
@@ -66,10 +63,7 @@ test('real dev and built-preview servers serve provider JSON and terminate unkno
   t.mock.method(globalThis, 'fetch', async (raw, options) => {
     const url = new URL(raw);
     if (url.hostname === '127.0.0.1') return nativeFetch(raw, options);
-    assert.ok(
-      ['opensky-network.org', 'api.adsb.lol'].includes(url.hostname),
-      url.origin,
-    );
+    assert.equal(url.hostname, 'api.adsb.lol', url.origin);
     return Response.json({
       time: Math.floor(Date.now() / 1000),
       states: [],
@@ -98,7 +92,8 @@ test('real dev and built-preview servers serve provider JSON and terminate unkno
     const origin = `http://127.0.0.1:${server.httpServer.address().port}`;
     try {
       for (const [route, status] of [
-        ['/api/flights', 200],
+        ['/api/flights?lat=30&lon=-97', 200],
+        ['/api/flights', 400],
         ['/api/military', 200],
         ['/api/adsbdb/type/invalid', 400],
         ['/api/firms/status', 200],

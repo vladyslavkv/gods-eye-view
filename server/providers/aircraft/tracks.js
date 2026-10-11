@@ -1,17 +1,17 @@
-import { getOpenSkyToken } from './opensky.js';
 import { readCappedResponseText } from '../common/http.js';
 /**
  * Vite plugin: aircraft track-history backfill proxies (PRD WS-F F1/F2).
  *
- * /api/flights/track?icao24=<hex6> — OpenSky GET /tracks/all (experimental;
- *   own credit bucket, 4 credits per call on the free tier). OAuth via the
- *   shared coalesced token. 60s per-icao cache; 404/429 forwarded so the
- *   client can fall back to its accumulated trail silently.
- * /api/military/track?hex=<hex> — adsb.lol tar1090 readsb trace
- *   (undocumented but live; no browser CORS, hence this proxy). Up to ~24h
- *   of real history per aircraft. Treat as best-effort; data is ODbL —
- *   credit "adsb.lol (ODbL)" in the UI.
+ * /api/flights/track?icao24=<hex6> and /api/military/track?hex=<hex> —
+ *   adsb.lol tar1090 readsb trace (undocumented but live; no browser CORS,
+ *   hence this proxy). Up to ~24h of real history per aircraft. 60s per-hex
+ *   cache; 404/429 forwarded so the client can fall back to its accumulated
+ *   trail silently. Treat as best-effort; data is ODbL — credit
+ *   "adsb.lol (ODbL)" in the UI.
  */
+const adsbLolTraceUrl = (hex) =>
+  `https://adsb.lol/data/traces/${hex.slice(-2)}/trace_full_${hex}.json`;
+
 export function trackBackfillProxies() {
   const TRACK_CACHE_MS = 60000;
   const TRACK_CACHE_MAX = 200;
@@ -27,7 +27,7 @@ export function trackBackfillProxies() {
     }
   }
 
-  async function proxyJson(res, key, upstreamUrl, headers = {}) {
+  async function proxyJson(res, key, upstreamUrl) {
     const cached = cache.get(key);
     if (cached && Date.now() - cached.at < TRACK_CACHE_MS) {
       res.statusCode = cached.status;
@@ -37,7 +37,6 @@ export function trackBackfillProxies() {
       return;
     }
     const upstream = await fetch(upstreamUrl, {
-      headers,
       signal: AbortSignal.timeout(12000),
     });
     const { tooLarge, text } = await readCappedResponseText(
@@ -55,8 +54,8 @@ export function trackBackfillProxies() {
     } else {
       body = text;
     }
-    // Cache the 502 like any upstream error: /tracks/all costs OpenSky
-    // credits, so a retry inside the window must not re-download the body.
+    // Cache the 502 like any upstream error, so a retry inside the window
+    // must not re-download the body.
     cachePut(key, { at: Date.now(), status, body });
     res.statusCode = status;
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -79,17 +78,11 @@ export function trackBackfillProxies() {
           );
           return;
         }
-        const token = await getOpenSkyToken();
-        await proxyJson(
-          res,
-          `osky:${icao24}`,
-          `https://opensky-network.org/api/tracks/all?icao24=${icao24}&time=0`,
-          token ? { Authorization: `Bearer ${token}` } : {},
-        );
+        await proxyJson(res, `lol:${icao24}`, adsbLolTraceUrl(icao24));
       } catch (error) {
         res.statusCode = 502;
         res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify({ error: 'OpenSky track fetch failed' }));
+        res.end(JSON.stringify({ error: 'adsb.lol trace fetch failed' }));
       }
     });
 
@@ -107,11 +100,7 @@ export function trackBackfillProxies() {
           );
           return;
         }
-        await proxyJson(
-          res,
-          `lol:${hex}`,
-          `https://adsb.lol/data/traces/${hex.slice(-2)}/trace_full_${hex}.json`,
-        );
+        await proxyJson(res, `lol:${hex}`, adsbLolTraceUrl(hex));
       } catch (error) {
         res.statusCode = 502;
         res.setHeader('Content-Type', 'application/json');

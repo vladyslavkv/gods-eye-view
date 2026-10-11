@@ -5,7 +5,7 @@ import {
   normalizeAdsbLolPointResponse,
 } from './adsbLolFallback.js';
 
-test('normalizes adsb.lol units into an OpenSky-compatible state vector', () => {
+test('normalizes adsb.lol units into a state vector', () => {
   const state = normalizeAdsbLolAircraftState({
     hex: 'A1B2C3',
     flight: 'UAL123 ',

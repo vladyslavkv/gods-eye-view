@@ -87,7 +87,7 @@ console.log(`\nSUMMARY (this tree, post-fix)\n${summary.join('\n')}\n`);
 // at JFK, 45 kt, "clearly on good ground, then suddenly popped below the
 // ground, then popped back up").
 //
-// Two mechanisms meet here. OpenSky's on_ground flag is not clean through a
+// Two mechanisms meet here. The flights feed's on_ground flag is not clean through a
 // rotation, and the fix's own height source switches at the same moment: a
 // grounded fix is the resolved surface, an airborne one with baro just
 // appearing is baro + geoid N, which at a sea-level field IS the geoid — below

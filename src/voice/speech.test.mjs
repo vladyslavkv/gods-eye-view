@@ -90,7 +90,7 @@ test('aircraft identity always covers operator, type and route from returned fie
       id: 'a1b2c3',
       layerId: 'flights',
       name: 'UAL428',
-      source: 'OpenSky',
+      source: 'adsb.lol',
       properties: {
         callsign: 'UAL428',
         operator: 'United Airlines',
@@ -182,7 +182,7 @@ test('nearest-aircraft results name the aircraft, distance and altitude briefly'
     location: 'Austin',
     layerId: 'flights',
     label: 'SWA1940',
-    feed: { state: 'nominal', source: 'OpenSky', count: 212 },
+    feed: { state: 'nominal', source: 'adsb.lol', count: 212 },
     aircraft: {
       id: 'a0b1',
       callsign: 'SWA1940',
@@ -205,7 +205,7 @@ test('nearest-aircraft results name the aircraft, distance and altitude briefly'
   const down = envelope('select_nearest_aircraft', {
     ok: false,
     stage: 'nearest',
-    feed: { state: 'unavailable', source: 'OpenSky' },
+    feed: { state: 'unavailable', source: 'adsb.lol' },
   });
   assert.equal(down.say, 'The aircraft feed is unavailable.');
   const stale = envelope('select_nearest_aircraft', {

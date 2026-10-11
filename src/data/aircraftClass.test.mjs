@@ -26,7 +26,7 @@ test('bizjet + uav classes (2026-08-16 Hangar fleet)', () => {
   assert.equal(classifyAircraft({ typeCode: 'TB2' }), 'uav');
 });
 
-test('category fallback (flights layer path — OpenSky extended int)', () => {
+test('category fallback (flights layer path — emitter category int)', () => {
   assert.equal(classifyAircraft({ category: 8 }), 'helicopter');
   assert.equal(classifyAircraft({ category: 6 }), 'widebody');
   assert.equal(classifyAircraft({ category: 7 }), 'fastjet');

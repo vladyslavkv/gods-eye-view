@@ -55,9 +55,9 @@ export function createQueries({
   function _likelyLanded(icao24) {
     const info = flightState.records.data.get(icao24);
     if (!info) return false;
-    // Round 7 (owner: "fewer planes than OpenSky's own map" + "parked planes
+    // Round 7 (owner: "fewer planes than the flights feed's own map" + "parked planes
     // never heal"): the fast cull only applies to contacts that were AIRBORNE
-    // this session — its original target, the post-LANDING ghost. OpenSky's
+    // this session — its original target, the post-LANDING ghost. The feed's
     // ground coverage flaps constantly, so fast-culling every grounded contact
     // put parked planes in an evict/re-enter churn: each re-entry was a
     // brand-new contact with cold floor state (geoid-height first poll), so
@@ -753,7 +753,7 @@ export function createQueries({
       if (outcome.status !== 'accepted') {
         return {
           status: 'source-unavailable',
-          reason: 'OpenSky snapshot unavailable',
+          reason: 'Flights snapshot unavailable',
           refreshEpoch: outcome.epoch,
           source: outcome.source,
           coverage: outcome.coverage,

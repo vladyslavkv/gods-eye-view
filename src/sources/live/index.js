@@ -1,9 +1,9 @@
 export { LiveSourceError } from './contract.js';
 export {
-  normalizeOpenSkyAircraft,
+  normalizeStateVectorAircraft,
   normalizeReadsbAircraft,
   normalizeAircraftTrack,
-  openSkySnapshot,
+  stateVectorSnapshot,
   readsbSnapshot,
   readsbIdentities,
 } from './aircraft.js';

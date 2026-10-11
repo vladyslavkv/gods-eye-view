@@ -17,7 +17,7 @@ import { celestrakTleUrl } from '../../../src/data/spaceProviderRequests.js';
  * CelesTrak asks clients not to re-fetch GP data more than ~every 2 h and
  * throttles offenders; every dev reload used to refetch every group. Cache TTL
  * 6 h; on upstream failure the freshest stale copy is served (a stale TLE
- * beats an empty satellites layer). Pattern mirrors openSkyProxy's
+ * beats an empty satellites layer). Pattern mirrors the flights proxy's
  * cache+serve-stale. Adapted from skylight's TleStore (MIT).
  */
 export function celestrakProxy() {

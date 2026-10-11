@@ -3,7 +3,7 @@
 // The bug: toggle() awaits the layer's init() + first update() before arming the
 // polling interval. A second toggle during that window used to interleave — the
 // disable branch ran mid-enable, the interval was armed AFTER the user turned the
-// layer off, and a subsequent enable armed a SECOND interval → 2× poll → OpenSky
+// layer off, and a subsequent enable armed a SECOND interval → 2× poll → upstream
 // 429. The fix serializes toggles per-entry and re-checks enabled after the awaits.
 //
 // Pure test: the manager only calls the layer module's lifecycle methods and (when
@@ -1821,13 +1821,12 @@ test('layer feed states distinguish unavailable, fallback, stale, and degraded c
     lastUpdate: 1,
   }), 'unavailable', 'an explicit total outage stays unavailable while last-good data is preserved');
   assert.equal(layerFeedState({ mode: 'sim', count: 100, lastUpdate: 1 }), 'fallback');
-  assert.equal(layerFeedState({ source: 'adsb.lol', count: 10, lastUpdate: 1 }), 'fallback');
-  assert.equal(layerFeedState({
-    source: 'adsb.lol',
-    fallback: false,
-    count: 10,
-    lastUpdate: 1,
-  }), 'nominal', 'an explicitly primary adsb.lol feed is not a fallback');
+  assert.equal(layerFeedState({ source: 'adsb.lol fallback', count: 10, lastUpdate: 1 }), 'fallback');
+  assert.equal(
+    layerFeedState({ source: 'adsb.lol', count: 10, lastUpdate: 1 }),
+    'nominal',
+    'adsb.lol is the primary flights feed, not a fallback',
+  );
   assert.equal(layerFeedState({ stale: true, count: 0, lastUpdate: 1 }), 'stale');
   assert.equal(layerFeedState({ error: 'partial group failure', count: 50, lastUpdate: 1 }), 'degraded');
   assert.equal(layerFeedState({ loading: true }), 'loading');

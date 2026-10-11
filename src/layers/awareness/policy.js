@@ -50,7 +50,7 @@ export const CONTEXT_RIM_HEIGHT_M = 2500;
 export const VESSEL_FOCUS_RADIUS_M = 3000;
 
 export const SOURCE_LABEL = {
-  flights: 'OpenSky',
+  flights: 'adsb.lol',
   military: 'adsb.lol',
   'ais-live-vessels': 'AISStream',
   'military-installations': 'OpenStreetMap',

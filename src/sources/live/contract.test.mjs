@@ -6,7 +6,7 @@ import {
   createVesselSource,
   normalizeReadsbAircraft,
   normalizeVesselObservation,
-  openSkySnapshot,
+  stateVectorSnapshot,
   readsbSnapshot,
 } from './index.js';
 
@@ -31,7 +31,7 @@ const response = (payload, headers = {}, status = 200) =>
   Response.json(payload, { headers, status });
 
 test('civil observations retain identity, separate altitude datums and source epochs', () => {
-  const snapshot = openSkySnapshot(
+  const snapshot = stateVectorSnapshot(
     { time: now / 1000 - 130, states: [aircraft] },
     { now, source: 'Test source', coverage: 'regional' },
   );
@@ -44,7 +44,7 @@ test('civil observations retain identity, separate altitude datums and source ep
   assert.equal(snapshot.ageMs, 130000);
   assert.equal(snapshot.freshness, 'stale');
   assert.equal(snapshot.coverage, 'regional');
-  const missing = openSkySnapshot(
+  const missing = stateVectorSnapshot(
     { states: [[...aircraft.slice(0, 3), null, null, ...aircraft.slice(5)]] },
     { now },
   );
@@ -56,15 +56,15 @@ test('civil observations retain identity, separate altitude datums and source ep
 test('mixed-invalid and duplicate admissions are explicitly incomplete; all-invalid rejects', () => {
   const invalid = [...aircraft];
   invalid[5] = 181;
-  const partial = openSkySnapshot({ states: [aircraft, invalid, aircraft] });
+  const partial = stateVectorSnapshot({ states: [aircraft, invalid, aircraft] });
   assert.equal(partial.records.length, 1);
   assert.equal(partial.complete, false);
   assert.equal(partial.rejectedCount, 2);
-  assert.throws(() => openSkySnapshot({ states: [invalid] }), {
+  assert.throws(() => stateVectorSnapshot({ states: [invalid] }), {
     code: 'malformed',
   });
-  assert.throws(() => openSkySnapshot({}), { code: 'malformed' });
-  assert.equal(openSkySnapshot({ states: [] }).complete, true);
+  assert.throws(() => stateVectorSnapshot({}), { code: 'malformed' });
+  assert.equal(stateVectorSnapshot({ states: [] }).complete, true);
 });
 
 test('readsb units and position/contact ages are normalized once against the source epoch', () => {
@@ -141,8 +141,6 @@ test('construction is inert; adapters preserve routes, viewport query, cache epo
           'x-flight-coverage': '250 nm regional',
         },
       );
-    if (url.startsWith('/api/flights/track'))
-      return response({ path: [[now / 1000 - 30, 30, -97, 1000, 45, false]] });
     if (url === '/api/military')
       return response(
         { ac: [{ hex: 'abc123', lat: 30, lon: -97, seen_pos: 15 }] },
@@ -165,7 +163,13 @@ test('construction is inert; adapters preserve routes, viewport query, cache epo
   assert.equal(requests[0].init.signal, signal);
   assert.equal(snapshot.source, 'adsb.lol');
   assert.equal(snapshot.coverage, '250 nm regional');
-  assert.equal((await civil.getTrack('abc123')).records[0].baroAltitudeM, 1000);
+  const civilTrack = await civil.getTrack('abc123');
+  assert.equal(requests.at(-1).url, '/api/flights/track?icao24=abc123');
+  assert.equal(civilTrack.records[0].baroAltitudeM, 304.8);
+  await civil.getSnapshot({ callsign: 'UAL1' });
+  assert.equal(requests.at(-1).url, '/api/flights?callsign=UAL1');
+  await civil.getSnapshot({ icao24: 'abc123' });
+  assert.equal(requests.at(-1).url, '/api/flights?icao24=abc123');
   const mil = await military.getSnapshot();
   assert.equal(mil.observedAtMs, now - 60000);
   assert.equal(mil.records[0].positionTimeMs, now - 75000);
@@ -266,7 +270,7 @@ test('out-of-range source epochs do not reach Date or globe time constructors', 
   const row = [...aircraft];
   row[3] = 1e100;
   row[4] = 1e100;
-  const snapshot = openSkySnapshot({ time: 1e100, states: [row] });
+  const snapshot = stateVectorSnapshot({ time: 1e100, states: [row] });
   assert.equal(snapshot.observedAtMs, null);
   assert.equal(snapshot.records[0].positionTimeMs, null);
   assert.equal(snapshot.records[0].contactTimeMs, null);

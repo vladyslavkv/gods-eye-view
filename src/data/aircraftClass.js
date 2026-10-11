@@ -3,7 +3,7 @@
  * Type-aware aircraft classification. ICAO type-designator sets adapted from
  * skylight (https://github.com/cpaczek/skylight, MIT) web/src/display/
  * aircraftGlyph.ts, extended with a fast-jet set for the military layer and
- * C17/K35R in the widebody set. Category fallbacks cover the OpenSky extended
+ * C17/K35R in the widebody set. Category fallbacks cover the extended state-vector
  * integer category (states index 17) and ADS-B emitter strings ("A1".."B1").
  */
 
@@ -389,8 +389,8 @@ const FASTJET = new Set([
   'T7A',
 ]);
 
-/** OpenSky extended-states integer category → class. */
-const OPENSKY_CATEGORY = {
+/** Extended state-vector integer category → class. */
+const STATE_VECTOR_CATEGORY = {
   2: 'light', // Light (< 15 500 lbs)
   3: 'airliner', // Small
   4: 'airliner', // Large
@@ -429,8 +429,8 @@ export function classifyAircraft({ typeCode, category } = {}) {
     if (LIGHT.has(code)) return 'light';
     return 'airliner'; // known type code, not in a special set → default jet
   }
-  if (Number.isFinite(category) && OPENSKY_CATEGORY[category])
-    return OPENSKY_CATEGORY[category];
+  if (Number.isFinite(category) && STATE_VECTOR_CATEGORY[category])
+    return STATE_VECTOR_CATEGORY[category];
   const cat = String(category || '')
     .trim()
     .toUpperCase();

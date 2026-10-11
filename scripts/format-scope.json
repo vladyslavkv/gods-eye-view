@@ -65,7 +65,7 @@
   "src/tooling/allowedHosts.test.mjs",
   "server/providers/common/http.js",
   "server/providers/common/query.js",
-  "server/providers/aircraft/opensky.js",
+  "server/providers/aircraft/flights.js",
   "server/providers/aircraft/adsb-lol.js",
   "server/providers/aircraft/enrichment.js",
   "server/providers/aircraft/tracks.js",

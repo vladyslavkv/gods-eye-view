@@ -173,7 +173,7 @@ test('Codex login resolves an installed executable before PATH and starts browse
       https_proxy: 'http://proxy.fixture:8080',
       OPENAI_API_KEY: 'fixture-api-key',
       GOOGLE_MAPS_SERVER_API_KEY: 'fixture-google-key',
-      OPENSKY_CLIENT_SECRET: 'fixture-opensky-secret',
+      TOMTOM_API_KEY: 'fixture-tomtom-key',
     },
     spawnImpl(command, args, options) {
       calls.push({ command, args, options });

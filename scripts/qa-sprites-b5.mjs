@@ -4,7 +4,7 @@
  * (type-aware billboard silhouettes + per-class 2D/3D scale; Batch 5).
  *
  * Injects synthetic STRAIGHT-FLYING aircraft covering ALL 8 classifyAircraft
- * classes — the flights layer via OpenSky extended categories (state[17]),
+ * classes — the flights layer via ADS-B emitter categories (state[17]),
  * the military layer via adsb.lol type codes — using the same fetch-shim +
  * history-priming pattern as scripts/qa-heading-b3.mjs (positions analytic at
  * serve time so every fix is self-consistent through the render delay).
@@ -107,9 +107,9 @@ const mDegLon = (m, lat) => m / (111320 * Math.cos((lat * Math.PI) / 180));
 
 const SPRITES = {
   timeOffsetSec: 0,
-  // OpenSky extended categories: 2 light, 4 large airliner, 6 heavy/widebody,
+  // ADS-B emitter categories: 2 light, 4 large airliner, 6 heavy/widebody,
   // 7 high-perf fastjet, 8 rotorcraft, 9 glider. (quadjet/turboprop need type
-  // codes, which OpenSky lacks — the military row covers those.)
+  // codes, which the flights feed lacks — the military row covers those.)
   flights: [
     { icao: 'caa001', callsign: 'FL-LGT', lon0: ROW_LON0 + 0 * ROW_STEP_DEG, lat0: 30.32, courseDeg: 0, speedMps: 80, altM: 2500, category: 2 },
     { icao: 'caa002', callsign: 'FL-AIR', lon0: ROW_LON0 + 1 * ROW_STEP_DEG, lat0: 30.32, courseDeg: 0, speedMps: 80, altM: 2600, category: 4 },
@@ -202,7 +202,7 @@ async function main() {
     await page.evaluateOnNewDocument((spec) => {
       window.__SPR = spec;
       window.__SPR.epochMs = Date.now();
-      window.__SPR_HITS = { opensky: 0, mil: 0 };
+      window.__SPR_HITS = { flights: 0, mil: 0 };
 
       // Straight line from (lon0, lat0) along courseDeg at speedMps.
       window.__SPR.stateAt = (p, tSec) => {
@@ -234,7 +234,7 @@ async function main() {
           return Promise.resolve(jsonResponse({ timestamp: Math.floor(nowSec), trace: [] }));
         }
         if (url.includes('/api/flights')) {
-          window.__SPR_HITS.opensky++;
+          window.__SPR_HITS.flights++;
           const states = S.flights.map((f) => {
             const s = S.stateAt(f, tRel);
             return [
@@ -363,7 +363,7 @@ async function main() {
       window.__SPR_DRIVER = setInterval(() => { fl.update(v); mil.update(v); }, 15000);
       return { fl: fl.getStats().count, mil: mil.getStats().count, hits: window.__SPR_HITS };
     });
-    console.log(`  flights count=${primed.fl} military count=${primed.mil} | shim hits opensky=${primed.hits.opensky} mil=${primed.hits.mil}`);
+    console.log(`  flights count=${primed.fl} military count=${primed.mil} | shim hits flights=${primed.hits.flights} mil=${primed.hits.mil}`);
     record('B1 ingest: synthetic planes in both layers',
       primed.fl === SPRITES.flights.length && primed.mil === SPRITES.military.length,
       `flights=${primed.fl}/${SPRITES.flights.length} military=${primed.mil}/${SPRITES.military.length}`);

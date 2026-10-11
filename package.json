@@ -39,7 +39,6 @@
     "layer-token:check": "node scripts/check-layer-state-tokens.mjs",
     "dev": "vite",
     "dev:secure": "./scripts/dev-secure.sh",
-    "opensky:import": "./scripts/opensky-import-client.sh",
     "build": "vite build",
     "build:panel": "node scripts/build-panel.mjs",
     "preview": "vite preview",

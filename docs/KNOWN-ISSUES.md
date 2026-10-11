@@ -138,8 +138,7 @@ Context:
 - Current `main` includes hardened proxy behavior in `vite.config.js`:
   - CCTV upstream URL no longer accepted from client query params.
   - Error payloads are sanitized.
-  - OpenSky cache stores successful responses only.
-  - OpenSky token refresh is coalesced.
+  - The flights cache stores successful responses only.
   - GBFS/CCTV memory growth is bounded.
 
 Validation target:

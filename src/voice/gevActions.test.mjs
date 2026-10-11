@@ -295,8 +295,8 @@ test('nearest-aircraft voice action refreshes an already-enabled viewport layer 
     styleManager.runImmediateNavigation('location', navigate)
   );
   const flights = {
-    source: 'OpenSky Network',
-    getStats: () => ({ source: 'OpenSky Network', count: 1, lastUpdate: Date.now() }),
+    source: 'adsb.lol',
+    getStats: () => ({ source: 'adsb.lol', count: 1, lastUpdate: Date.now() }),
     getAnalystRecords: () => [
       { id: 'DUPLICATE', icao24: 'fresh-austin', callsign: 'DUPLICATE', lat: 30.28, lon: -97.74, altitudeM: 1800, onGround: false },
     ],
@@ -3310,9 +3310,9 @@ test('analyst_query and get_current_view_state carry stale feed provenance', asy
   const now = Date.now();
   const flights = {
     id: 'flights',
-    source: 'OpenSky Network',
+    source: 'adsb.lol',
     getStats: () => ({
-      source: 'OpenSky Network',
+      source: 'adsb.lol',
       stale: true,
       count: 12,
       lastUpdate: now - 240_000,
@@ -3337,7 +3337,7 @@ test('analyst_query and get_current_view_state carry stale feed provenance', asy
       id: 'flights',
       name: 'Live Flights',
       enabled: true,
-      source: 'OpenSky Network',
+      source: 'adsb.lol',
       stats: flights.getStats(),
     }],
   };

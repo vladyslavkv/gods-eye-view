@@ -12,7 +12,7 @@
  * same WebGL launch flags the existing Cesium render harness uses
  * (tools/cesium-render.mjs): --use-gl=angle / --use-angle=swiftshader.
  *
- * DETERMINISM: it does NOT depend on live OpenSky / adsb.lol / AISStream
+ * DETERMINISM: it does NOT depend on live adsb.lol / AISStream
  * (all optional or rate-limited in local QA). Instead it installs a persistent
  * `fetch` shim in the page that intercepts the poll endpoints and returns
  * SYNTHETIC aircraft positioned near the camera, in the EXACT upstream payload
@@ -327,7 +327,7 @@ async function main() {
       // Stash the planes so the page can mutate them later (e.g. to advance
       // positions), and so we can confirm the shim is live.
       window.__SYNTH = synth;
-      window.__SYNTH_HITS = { opensky: 0, mil: 0 };
+      window.__SYNTH_HITS = { flights: 0, mil: 0 };
 
       const realFetch = window.fetch.bind(window);
       const jsonResponse = (obj) =>
@@ -342,9 +342,9 @@ async function main() {
           : input?.url;
         const url = new URL(requestUrl, window.location.href);
         const isAppRequest = url.origin === appOrigin;
-        // OpenSky (commercial flights): { states: [ state-vector[] ] }
+        // Flights: { states: [ state-vector[] ] }
         if (isAppRequest && url.pathname === '/api/flights') {
-          window.__SYNTH_HITS.opensky++;
+          window.__SYNTH_HITS.flights++;
           // A withheld contact models the ordinary case where the recipient's
           // first authoritative refresh does not yet carry the shared aircraft.
           const withheld = (() => {
@@ -629,7 +629,7 @@ async function main() {
       };
     });
     console.log(`  flights enabled=${enabled.flEnabled} count=${enabled.flStats.count} | military enabled=${enabled.milEnabled} count=${enabled.milStats.count}`);
-    console.log(`  shim hits: opensky=${enabled.hits.opensky} mil=${enabled.hits.mil}`);
+    console.log(`  shim hits: flights=${enabled.hits.flights} mil=${enabled.hits.mil}`);
 
     const injectionWorked = enabled.flStats.count > 0 && enabled.milStats.count > 0;
     record('inject: synthetic flights ingested (count>0)', enabled.flStats.count > 0,

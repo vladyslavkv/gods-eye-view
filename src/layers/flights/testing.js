@@ -96,7 +96,7 @@ export function createTesting({
   function _setFlightTrackingRefreshOutcomeForTest({
     status = 'accepted',
     ids = [],
-    source = 'OpenSky Network',
+    source = 'adsb.lol',
     coverage = 'test',
   } = {}) {
     const epoch = ++flightState.feed._trackingRefreshEpoch;

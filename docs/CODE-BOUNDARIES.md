@@ -129,7 +129,7 @@ preserves the default configuration and named provider exports for tools/tests.
 ## Aircraft and vessel providers
 
 `server/providers/live.js` exports the existing Node middleware factories and
-request helpers. `aircraft/` owns OpenSky state/fallback, military positions,
+request helpers. `aircraft/` owns adsb.lol flight state, military positions,
 enrichment and track endpoints in separate files. `vessels/ais-live.js` owns
 websocket setup and route responses; `vessels/ais-store.js` owns record ingestion,
 static metadata and recent-track storage. Neither area imports globe rendering.

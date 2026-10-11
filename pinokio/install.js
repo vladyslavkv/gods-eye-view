@@ -23,8 +23,6 @@ module.exports = {
           AISSTREAM_API_KEY: '{{env.AISSTREAM_API_KEY || ""}}',
           FIRMS_MAP_KEY: '{{env.FIRMS_MAP_KEY || ""}}',
           TOMTOM_API_KEY: '{{env.TOMTOM_API_KEY || ""}}',
-          OPENSKY_CLIENT_ID: '{{env.OPENSKY_CLIENT_ID || ""}}',
-          OPENSKY_CLIENT_SECRET: '{{env.OPENSKY_CLIENT_SECRET || ""}}',
           LL2_API_TOKEN: '{{env.LL2_API_TOKEN || ""}}',
           GEV_RATELIMIT_OPENAI_PER_MIN: '{{env.GEV_RATELIMIT_OPENAI_PER_MIN || ""}}',
           GEV_RATELIMIT_GOOGLE_PER_MIN: '{{env.GEV_RATELIMIT_GOOGLE_PER_MIN || ""}}',

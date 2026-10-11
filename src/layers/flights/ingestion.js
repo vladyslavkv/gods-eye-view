@@ -99,7 +99,7 @@ export function createFlightFeed(source) {
   feed._activeUpdateControllers = new Set();
   feed._lastStatus = null;
   feed._lastSource = source?.label || 'Aircraft';
-  feed._lastCoverage = 'worldwide upstream snapshot';
+  feed._lastCoverage = 'upstream snapshot';
   feed._trackingRefreshEpoch = 0;
   feed._lastTrackingRefreshOutcome = {
     epoch: 0,

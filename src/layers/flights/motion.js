@@ -225,7 +225,7 @@ export function createMotion({
       );
     }
 
-    // Newest POSITION is older than renderTime. OpenSky can still be receiving
+    // Newest POSITION is older than renderTime. The flights feed can still be receiving
     // fresh contact/kinematic messages for that aircraft; freezing at a hard
     // 60 s-after-position boundary produced the visible stop → catch-up → stop
     // cadence. Coast through the latest real contact plus a bounded grace

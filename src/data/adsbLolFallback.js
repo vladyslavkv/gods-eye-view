@@ -31,11 +31,11 @@ function emitterCategory(value) {
 }
 
 /**
- * Convert one adsb.lol v2 aircraft record into the OpenSky state-vector shape
+ * Convert one adsb.lol v2 aircraft record into the state-vector shape
  * consumed by the existing Flights renderer.
  * @param {object} aircraft adsb.lol aircraft record.
  * @param {number} nowSeconds Feed response time in epoch seconds.
- * @returns {Array|null} OpenSky-compatible state vector, or null when invalid.
+ * @returns {Array|null} State vector, or null when invalid.
  */
 export function normalizeAdsbLolAircraftState(aircraft, nowSeconds) {
   const hex = String(aircraft?.hex || '')
@@ -81,7 +81,7 @@ export function normalizeAdsbLolAircraftState(aircraft, nowSeconds) {
 }
 
 /**
- * Normalize an adsb.lol point response to an OpenSky-compatible response.
+ * Normalize an adsb.lol point response to a state-vector response.
  * Invalid rows and positionless contacts are intentionally excluded.
  * @param {object} payload adsb.lol v2 response.
  * @returns {{time:number,states:Array[]}}

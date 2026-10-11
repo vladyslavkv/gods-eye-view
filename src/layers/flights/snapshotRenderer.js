@@ -48,7 +48,7 @@ export function createFlightSnapshotRenderer({
 
       // Known-military aircraft: the dedicated military layer wins
       // (icon + track + click) while it is enabled — suppress the
-      // OpenSky duplicate entirely (except a currently tracked one,
+      // flights-feed duplicate entirely (except a currently tracked one,
       // which hands off on untrack).
       const isMil = isMilitaryIcao(icao24);
       if (isMil && tracking._militaryLayerSuppresses(icao24)) {
@@ -92,7 +92,7 @@ export function createFlightSnapshotRenderer({
       const isTracked = icao24 === flightState._trackedIcao;
 
       // Append to position history stamped with the FEED's fix epoch
-      // (time_position), not client receipt time — OpenSky positions arrive
+      // (time_position), not client receipt time — feed positions arrive
       // 5-15s stale and receipt-time stamping is what caused the
       // back/forward oscillation. Only append when the fix actually
       // advances, so stale repeats don't create zero-dt segments.
@@ -234,7 +234,7 @@ export function createFlightSnapshotRenderer({
     }
 
     // Remove aircraft only after MISSING_POLL_LIMIT consecutive absences.
-    // OpenSky routinely drops aircraft for a single poll; immediate removal
+    // The flights feed routinely drops aircraft for a single poll; immediate removal
     // made planes blink and yanked the camera off actively tracked flights.
     // EXCEPTION: likely-landed planes (last fix low + slow) get only
     // LANDED_MISSING_POLL_LIMIT — their disappearance means "landed", not a

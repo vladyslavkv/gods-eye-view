@@ -7,7 +7,7 @@ import {
 } from './contract.js';
 import {
   normalizeAircraftTrack,
-  openSkySnapshot,
+  stateVectorSnapshot,
   readsbSnapshot,
   readsbIdentities,
 } from './aircraft.js';
@@ -15,39 +15,6 @@ import { normalizeVesselTrack, vesselSnapshot } from './vessels.js';
 
 const defaultFetch = (...args) => globalThis.fetch(...args);
 const header = (response, name) => response.headers?.get?.(name);
-
-function openSkyError(response) {
-  const error = httpError(response, 'Flights');
-  const mode = String(
-    header(response, 'x-opensky-auth-mode-used') ||
-      header(response, 'x-opensky-auth') ||
-      '',
-  ).toLowerCase();
-  const reason = String(
-    header(response, 'x-opensky-auth-reason') || '',
-  ).toLowerCase();
-  if (response.status === 429 && (!mode || mode === 'anon'))
-    error.message = 'OpenSky rate limited (anonymous)';
-  if (response.status === 401 || response.status === 403) {
-    const reasons = {
-      oauth_invalid_or_missing: 'OpenSky OAuth client missing/invalid',
-      oauth_invalid_credentials: 'OpenSky OAuth rejected credentials',
-      basic_invalid_credentials: 'OpenSky username/password rejected',
-      missing_basic_creds: 'OpenSky auth missing',
-      missing_oauth_and_basic_creds: 'OpenSky auth missing',
-      auth_required: 'OpenSky auth required',
-      forced_anonymous: 'OpenSky auth required',
-    };
-    error.message =
-      reasons[reason] ||
-      (/^(oauth_|basic_)/.test(reason)
-        ? 'OpenSky auth invalid'
-        : mode === 'anon'
-          ? 'OpenSky auth required'
-          : 'OpenSky auth failed');
-  }
-  return error;
-}
 
 /**
  * The provider a feed response names in `X-Feed-Source`, so a server that
@@ -60,6 +27,18 @@ function feedSource(response, fallback) {
     : fallback;
 }
 
+/** An adsb.lol readsb trace (`timestamp` + offset rows) as track records. */
+function readsbTrack(payload) {
+  const baseTimeMs = epoch(payload?.timestamp, 1000);
+  return {
+    records:
+      baseTimeMs == null
+        ? []
+        : normalizeAircraftTrack(payload?.trace, { baseTimeMs }),
+    complete: false,
+  };
+}
+
 /** The flights feed (/api/flights); no request starts during construction. */
 export function createFlightSource({
   fetchImpl = defaultFetch,
@@ -69,7 +48,12 @@ export function createFlightSource({
     label: 'Flights',
     async getSnapshot(query = {}, { signal } = {}) {
       const params = new URLSearchParams();
-      if (Number.isFinite(query.latitude) && Number.isFinite(query.longitude)) {
+      if (query.callsign) params.set('callsign', query.callsign);
+      else if (query.icao24) params.set('icao24', query.icao24);
+      else if (
+        Number.isFinite(query.latitude) &&
+        Number.isFinite(query.longitude)
+      ) {
         params.set('lat', query.latitude.toFixed(4));
         params.set('lon', query.longitude.toFixed(4));
       }
@@ -79,16 +63,13 @@ export function createFlightSource({
         { signal },
         'Flights',
       );
-      if (!response.ok) throw openSkyError(response);
+      if (!response.ok) throw httpError(response, 'Flights');
       return {
-        ...openSkySnapshot(payload, {
-          // A fallback provider names itself in X-Flight-Source.
+        ...stateVectorSnapshot(payload, {
           source:
             header(response, 'x-flight-source') ||
             feedSource(response, 'Flights'),
-          coverage:
-            header(response, 'x-flight-coverage') ||
-            'worldwide upstream snapshot',
+          coverage: header(response, 'x-flight-coverage') || 'upstream snapshot',
           now: now(),
         }),
         status: response.status,
@@ -102,10 +83,7 @@ export function createFlightSource({
         'Flights',
       );
       if (!response.ok) throw httpError(response, 'Flights');
-      return {
-        records: normalizeAircraftTrack(payload?.path),
-        complete: false,
-      };
+      return readsbTrack(payload);
     },
     async getEnrichment(query, { signal } = {}) {
       if (!['type', 'route'].includes(query.kind))
@@ -165,17 +143,7 @@ export function createMilitarySource({
         'Military aircraft',
       );
       if (!response.ok) throw httpError(response, 'Military aircraft');
-      const baseTimeMs = epoch(payload?.timestamp, 1000);
-      return {
-        records:
-          baseTimeMs == null
-            ? []
-            : normalizeAircraftTrack(payload?.trace, {
-                baseTimeMs,
-                readsb: true,
-              }),
-        complete: false,
-      };
+      return readsbTrack(payload);
     },
   };
 }

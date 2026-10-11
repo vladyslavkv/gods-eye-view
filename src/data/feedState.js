@@ -10,7 +10,6 @@ export function layerFeedState(stats = {}) {
   const status =
     typeof state.status === 'string' ? state.status.toLowerCase() : '';
   const source = `${state.source || ''} ${state.coverage || ''}`;
-  const hasExplicitFallback = typeof state.fallback === 'boolean';
   const hasPriorData = Number(state.count) > 0 || Boolean(state.lastUpdate);
   const presentedError =
     state.error || state.lastError || state.managerRefreshError;
@@ -37,8 +36,7 @@ export function layerFeedState(stats = {}) {
     state.fallback === true ||
     status === 'fallback' ||
     state.mode === 'sim' ||
-    /\bfallback\b/i.test(source) ||
-    (!hasExplicitFallback && /\badsb\.lol\b/i.test(source))
+    /\bfallback\b/i.test(source)
   ) {
     return 'fallback';
   }

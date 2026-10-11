@@ -12,7 +12,6 @@ import {
   isConfiguredValue,
   npmProcessSpec,
   readDoctorDotenvValue,
-  resolveOpenSkyAuthMode,
   resolveCredential,
 } from '../scripts/setup-doctor.mjs';
 
@@ -75,27 +74,6 @@ test('doctor selects a Windows-safe npm process without changing Unix behavior',
   });
   assert.deepEqual(npmProcessSpec('darwin'), { command: 'npm', shell: false });
   assert.deepEqual(npmProcessSpec('linux'), { command: 'npm', shell: false });
-});
-
-test('doctor recognizes every OpenSky OAuth keychain alias used by dev-fresh', () => {
-  assert.deepEqual(credential('OPENSKY_CLIENT_ID').keychain, [
-    ['opensky-network', 'client_id'],
-    ['opensky-network', 'client-id'],
-    ['opensky-network', 'client'],
-    ['opensky-network', 'api-key'],
-    ['opensky', 'client_id'],
-    ['opensky', 'client-id'],
-    ['opensky', 'client'],
-    ['opensky', 'api-key'],
-  ]);
-  assert.deepEqual(credential('OPENSKY_CLIENT_SECRET').keychain, [
-    ['opensky-network', 'client_secret'],
-    ['opensky-network', 'client-secret'],
-    ['opensky-network', 'secret'],
-    ['opensky', 'client_secret'],
-    ['opensky', 'client-secret'],
-    ['opensky', 'secret'],
-  ]);
 });
 
 test('Pinokio-scoped diagnosis ignores Keychain items its start path does not import', () => {
@@ -171,86 +149,11 @@ test('doctor reads the dotenv ladder without requiring Vite to be installed', ()
   }
 });
 
-test('doctor resolves OpenSky auth mode with launcher-compatible precedence', () => {
-  const root = mkdtempSync(path.join(tmpdir(), 'gev-doctor-opensky-mode-'));
-  try {
-    writeFileSync(path.join(root, '.env'), 'OPENSKY_AUTH_MODE=anon\n');
-    assert.equal(
-      resolveOpenSkyAuthMode({ environment: {}, rootDir: root }),
-      'anon',
-    );
-    assert.equal(
-      resolveOpenSkyAuthMode({
-        environment: { OPENSKY_AUTH_MODE: 'oauth' },
-        rootDir: root,
-      }),
-      'oauth',
-    );
-    assert.equal(
-      resolveOpenSkyAuthMode({
-        environment: { OPENSKY_AUTH_MODE: '' },
-        rootDir: root,
-      }),
-      'anon',
-    );
-    assert.equal(
-      resolveOpenSkyAuthMode({
-        environment: { OPENSKY_AUTH_MODE: 'invalid' },
-        rootDir: root,
-      }),
-      'oauth',
-    );
-  } finally {
-    rmSync(root, { recursive: true, force: true });
-  }
-});
-
-test('doctor reports keyless anonymous OpenSky access for explicit anon mode', () => {
-  const credentials = {
-    OPENSKY_CLIENT_ID: { configured: true },
-    OPENSKY_CLIENT_SECRET: { configured: true },
-  };
+test('doctor reports the keyless adsb.lol flights feed', () => {
   assert.equal(
-    buildCapabilitySummary(credentials, { openSkyAuthMode: 'anon' }).flights,
-    'OpenSky keyless anonymous access (rate-limited)',
+    buildCapabilitySummary({}).flights,
+    'adsb.lol keyless regional feed',
   );
-});
-
-test('doctor retains OAuth capability wording for a complete client pair', () => {
-  const credentials = {
-    OPENSKY_CLIENT_ID: { configured: true },
-    OPENSKY_CLIENT_SECRET: { configured: true },
-  };
-  assert.equal(
-    buildCapabilitySummary(credentials, { openSkyAuthMode: 'oauth' }).flights,
-    'OpenSky OAuth credentials present (runtime mode and validity not verified)',
-  );
-});
-
-test('doctor reports Basic mode without inferring runtime auth from OAuth credentials', () => {
-  const oauthCredentials = {
-    OPENSKY_CLIENT_ID: { configured: true },
-    OPENSKY_CLIENT_SECRET: { configured: true },
-  };
-  for (const credentials of [{}, oauthCredentials]) {
-    assert.equal(
-      buildCapabilitySummary(credentials, { openSkyAuthMode: 'basic' }).flights,
-      'OpenSky Basic mode selected (credential presence and validity not verified)',
-    );
-  }
-});
-
-test('doctor reports auto mode without assuming its eventual credential choice', () => {
-  const oauthCredentials = {
-    OPENSKY_CLIENT_ID: { configured: true },
-    OPENSKY_CLIENT_SECRET: { configured: true },
-  };
-  for (const credentials of [{}, oauthCredentials]) {
-    assert.equal(
-      buildCapabilitySummary(credentials, { openSkyAuthMode: 'auto' }).flights,
-      'OpenSky auto mode selected (runtime credential choice and validity not verified)',
-    );
-  }
 });
 
 test('doctor describes the credential ladder without exposing values', () => {
@@ -262,8 +165,6 @@ test('doctor describes the credential ladder without exposing values', () => {
     AISSTREAM_API_KEY: { configured: false },
     FIRMS_MAP_KEY: { configured: false },
     TOMTOM_API_KEY: { configured: false },
-    OPENSKY_CLIENT_ID: { configured: false },
-    OPENSKY_CLIENT_SECRET: { configured: false },
     LL2_API_TOKEN: { configured: true, source: 'environment' },
     MAPILLARY_CLIENT_TOKEN: { configured: false },
   };
@@ -282,10 +183,7 @@ test('doctor describes the credential ladder without exposing values', () => {
     'off until an OpenAI key is added, or a Codex ChatGPT sign-in is selected in Provider Settings (experimental)',
   );
   assert.match(capabilities.missions, /token allowance/);
-  assert.equal(
-    capabilities.flights,
-    'OpenSky keyless anonymous access (rate-limited)',
-  );
+  assert.equal(capabilities.flights, 'adsb.lol keyless regional feed');
 
   const report = formatSetupReport({
     ready: true,
@@ -314,7 +212,7 @@ test('doctor describes the credential ladder without exposing values', () => {
   assert.doesNotMatch(pinokioReport, /npm run dev/);
 });
 
-test('doctor sends Keychain-backed reports to dev-fresh and describes OpenSky as presence only', () => {
+test('doctor sends Keychain-backed reports to dev-fresh', () => {
   const credentials = Object.fromEntries(
     [
       'GOOGLE_MAPS_API_KEY',
@@ -324,8 +222,6 @@ test('doctor sends Keychain-backed reports to dev-fresh and describes OpenSky as
       'AISSTREAM_API_KEY',
       'FIRMS_MAP_KEY',
       'TOMTOM_API_KEY',
-      'OPENSKY_CLIENT_ID',
-      'OPENSKY_CLIENT_SECRET',
       'LL2_API_TOKEN',
       'MAPILLARY_CLIENT_TOKEN',
     ].map((name) => [name, { configured: false }]),
@@ -333,11 +229,6 @@ test('doctor sends Keychain-backed reports to dev-fresh and describes OpenSky as
   credentials.GOOGLE_MAPS_API_KEY = {
     configured: true,
     source: 'macOS Keychain',
-  };
-  credentials.OPENSKY_CLIENT_ID = { configured: true, source: 'environment' };
-  credentials.OPENSKY_CLIENT_SECRET = {
-    configured: true,
-    source: 'environment',
   };
   const capabilities = buildCapabilitySummary(credentials);
   const output = formatSetupReport({
@@ -350,9 +241,6 @@ test('doctor sends Keychain-backed reports to dev-fresh and describes OpenSky as
   });
   assert.match(output, /Run \.\/scripts\/dev-fresh\.sh/);
   assert.doesNotMatch(output, /Run npm run dev/);
-  assert.match(capabilities.flights, /credentials present/);
-  assert.match(capabilities.flights, /runtime mode and validity not verified/);
-  assert.doesNotMatch(capabilities.flights, /polling/);
 });
 
 test('doctor never calls a dependency-missing setup ready', () => {
@@ -365,8 +253,6 @@ test('doctor never calls a dependency-missing setup ready', () => {
       'AISSTREAM_API_KEY',
       'FIRMS_MAP_KEY',
       'TOMTOM_API_KEY',
-      'OPENSKY_CLIENT_ID',
-      'OPENSKY_CLIENT_SECRET',
       'LL2_API_TOKEN',
       'MAPILLARY_CLIENT_TOKEN',
     ].map((name) => [name, { configured: false }]),

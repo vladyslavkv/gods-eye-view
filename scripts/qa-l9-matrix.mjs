@@ -126,7 +126,7 @@ function normalizeVerdict(res) {
 
 /** Environment facts discovered in preflight; checks read this. */
 const env = {
-  // FIRMS/TOMTOM/AIS/OPENAI/OPENSKY →
+  // FIRMS/TOMTOM/AIS/OPENAI →
   //   true    key positively present
   //   false   key positively ABSENT (the endpoint said so in its own words)
   //   'error' the status endpoint is unhealthy — key state UNKNOWN, and any
@@ -162,7 +162,7 @@ function keyGuard(name, state) {
  * unmapped layer must never pass silently just because nobody added it here.
  */
 const CREDIT_EXPECTATIONS = {
-  flights: /OpenSky/i,
+  flights: /adsb\.lol/i,
   military: /adsb\.lol/i,
   satellites: /CelesTrak/i,
   earthquakes: /Geological Survey|USGS/i,
@@ -739,33 +739,10 @@ check({
 check({
   id: 'B2', group: 'B', desc: 'Flights proxy returns live contacts (/api/flights)',
   run: async () => {
-    const r = await jget('/api/flights?lamin=24&lomin=-125&lamax=50&lomax=-66', { timeoutMs: 45000 });
+    const r = await jget('/api/flights?lat=37&lon=-95', { timeoutMs: 45000 });
     if (!r.ok) return fail(`HTTP ${r.status}: ${r.text.slice(0, 120)}`);
     const n = r.json?.states?.length || 0;
-    return n > 0 ? pass(`${n} states, cache=${r.headers.get('x-opensky-cache') || 'n/a'}`) : fail('0 states returned');
-  },
-});
-
-check({
-  id: 'B3', group: 'B', desc: 'OpenSky credentials are actually in use (not the anonymous/fallback path)',
-  run: async () => {
-    const r = await jget('/api/flights?lamin=24&lomin=-125&lamax=50&lomax=-66', { timeoutMs: 45000 });
-    // Header names are exact: X-OpenSky-Auth-Mode-Used / X-OpenSky-Auth-Reason.
-    // (An earlier guess at these names made this check pass vacuously.)
-    const reason = r.headers.get('X-OpenSky-Auth-Reason') || '';
-    const used = r.headers.get('X-OpenSky-Auth-Mode-Used') || r.headers.get('X-OpenSky-Auth') || '';
-    if (!r.ok) return fail(`HTTP ${r.status} from a responsive proxy (auth=${used || 'n/a'} reason=${reason || 'n/a'}): ${r.text.slice(0, 120)}`);
-    if (!used) return fail('proxy answered 200 without the X-OpenSky-Auth headers — cannot verify which auth mode served this');
-    if (/invalid_credentials|rejected/.test(reason)) return fail(`OpenSky rejected the configured credentials (reason=${reason})`);
-    if (/missing_.*creds|invalid_or_missing/.test(reason) || used === 'anon') {
-      return skip(`OpenSky served ANONYMOUSLY (auth=${used}, reason=${reason || 'n/a'}) — the keyed claim needs configured credentials`, 'OWNER-RUN');
-    }
-    if (!/^(oauth|basic)$/.test(used)) {
-      // 'cached'/'unknown'/'adsblol-regional' etc. — real, but not proof that
-      // credentials are in use right now.
-      return fail(`served by mode "${used}" (reason=${reason || 'n/a'}) — not a live authenticated OpenSky fetch, so this check cannot confirm credentials are in use`);
-    }
-    return pass(`authenticated: auth=${used}, reason=${reason || 'n/a'}, cache=${r.headers.get('X-OpenSky-Cache') || 'n/a'}`);
+    return n > 0 ? pass(`${n} states, cache=${r.headers.get('x-feed-cache') || 'n/a'}`) : fail('0 states returned');
   },
 });
 
@@ -1468,10 +1445,7 @@ async function runBrowserGroup(record) {
     const r = await settle('flights', 40);
     const s = r.stats || {};
     if (!(s.count > 0)) return fail(`0 contacts (status=${s.status || ''} error=${s.error || ''})`);
-    const src = String(s.source || '');
-    return /adsb\.lol/i.test(src)
-      ? skip(`${s.count} contacts but via the adsb.lol FALLBACK (source=${src}) — OpenSky credentials needed for the live claim`, 'OWNER-RUN')
-      : pass(`${s.count} contacts, source=${src || 'OpenSky'}, stale=${!!s.stale}`);
+    return pass(`${s.count} contacts, source=${s.source || 'n/a'}, stale=${!!s.stale}`);
   });
 
   await step('C5', async () => {
@@ -2075,16 +2049,6 @@ async function preflight() {
     else if (ais.status === 200 && ais.json && Array.isArray(ais.json.rows)) env.keys.AIS = true;
     else env.keys.AIS = 'error';
   } catch { env.keys.AIS = 'error'; }
-  try {
-    const os = await jget('/api/flights?lamin=29&lomin=-99&lamax=31&lomax=-97', { timeoutMs: 40000 });
-    const reason = os.headers.get('X-OpenSky-Auth-Reason') || '';
-    const used = os.headers.get('X-OpenSky-Auth-Mode-Used') || os.headers.get('X-OpenSky-Auth') || '';
-    if (!os.ok) env.keys.OPENSKY = 'error';
-    else if (/missing_.*creds|invalid_or_missing/.test(reason)) env.keys.OPENSKY = false;
-    else if (/^(oauth|basic)$/.test(used)) env.keys.OPENSKY = true;
-    else if (used === 'anon') env.keys.OPENSKY = false;
-    else env.keys.OPENSKY = 'error';
-  } catch { env.keys.OPENSKY = 'error'; }
   if (CHEAP) {
     // Minting a Realtime token is free, but --cheap promises to touch nothing
     // cost-bearing; leave OpenAI presence unknown and let its checks skip.
@@ -2144,7 +2108,7 @@ async function main() {
     console.log(C.r(`  shell  : HTTP ${env.shellStatus} — the target is RESPONDING but erroring. Running the matrix anyway; this is a product failure, not an environment one.`));
   }
   console.log(`  node   : ${process.versions.node}${env.node24 ? C.d(` (Node 24 available: ${env.node24.label})`) : ''}`);
-  console.log(`  keys   : OpenSky ${keyLabel(env.keys.OPENSKY)} · FIRMS ${keyLabel(env.keys.FIRMS)} · TomTom ${keyLabel(env.keys.TOMTOM)} · AISStream ${keyLabel(env.keys.AIS)} · OpenAI ${keyLabel(env.keys.OPENAI)}`);
+  console.log(`  keys   : FIRMS ${keyLabel(env.keys.FIRMS)} · TomTom ${keyLabel(env.keys.TOMTOM)} · AISStream ${keyLabel(env.keys.AIS)} · OpenAI ${keyLabel(env.keys.OPENAI)}`);
   console.log(C.d('  (key presence is read from each proxy\'s own status report; no key value is ever read or logged)\n'));
 
   const record = (c, rawRes, ms) => {
