@@ -28,6 +28,10 @@ _“pretty cool”_ — [Brendan Eich](https://x.com/BrendanEich/status/20945920
 
 </div>
 
+## Commercial-clean fork
+
+Commercial-clean fork: TeleGeography cables, Bhote Koshi event data, OpenSky and Google News RSS removed; see [DATA_SOURCES.md](DATA_SOURCES.md).
+
 ---
 
 <div align="center">
@@ -75,7 +79,6 @@ Start with the included data sources, then add your own. Each layer is a separat
 - **🧭 Tilt and North Up:** Switch between straight-down and a 35° oblique, or put north at the top, while a tracked target stays centered.
 - **🔍 Keyless search:** Type coordinates or a bundled city or landmark to fly there with no network request; other names use Google when configured, then Photon and Nominatim.
 - **📦 Shareable scenes:** Import, preview and share Director scenes as files or bundles, with camera anchors, authored moves and data packs.
-- **🌊 Nepal flood scene:** Replay the Bhote Koshi flood: flood path, witness sources and before-and-after imagery (bundled data is non-commercial; see [DATA_SOURCES.md](DATA_SOURCES.md)).
 
 ---
 

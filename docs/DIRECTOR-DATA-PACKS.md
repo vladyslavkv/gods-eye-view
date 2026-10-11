@@ -67,7 +67,7 @@ this is not a new arbitrary-URL proxy.
 Pack attribution always includes nonempty `text` and `license`; an optional
 HTTPS `url` opens as a source link with no opener/referrer. Importing or sharing
 an asset never changes its license. D5 adds no third-party content and preserves
-all existing Nepal content and contributor notices.
+existing contributor notices.
 
 Optional `byteLength` specifies the exact expected byte count; optional `sha256`
 is a lowercase hexadecimal SHA-256 digest checked before rendering. There are at

@@ -50,11 +50,10 @@ attributing a difference to the client.
 | Bikeshare | 2,069.498 ms | 633 | 60 / 60 FPS | 157.4 MiB |
 | Datacenters | 817.693 ms | 4,362 | 59.6 / 60 FPS | 328.2 MiB |
 | Flights | 667.671 ms | 247 | 60 / 60 FPS | 118.4 MiB |
-| Submarine cables | 614.727 ms | 2,629 | 60 / 60 FPS | 412.0 MiB |
 | Military Flights | 557.113 ms | 68 | 60 / 60 FPS | 118.4 MiB |
 
-CCTV had the largest cold activation cost in this capture. Submarine cables
-used the most heap, followed by datacenters. Completed single-layer samples
+CCTV had the largest cold activation cost in this capture. Datacenters used the
+most heap of the layers listed. Completed single-layer samples
 generally reached 60 FPS, so activation time and heap separate these cases more
 clearly than steady-state frame rate.
 

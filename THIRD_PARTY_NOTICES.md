@@ -45,3 +45,13 @@ Street Level viewer; the complete resolved dependency inventory remains in
 - Source: <https://github.com/mrdoob/three.js>
 - License: MIT
 - License text: <https://github.com/mrdoob/three.js/blob/dev/LICENSE>
+
+## Third-party data removed in this fork
+
+This fork removed every bundled or fetched data source whose terms are
+non-commercial only: the TeleGeography Submarine Cable Map (CC BY-NC-SA 3.0),
+the Bhote Koshi event imagery and derived river centerline (Vantor / GeoPera,
+CC BY-NC 4.0), the OpenSky Network flight feed (non-commercial license) and
+Google News RSS (personal, non-commercial use only). None of their files ship
+here and the app no longer contacts those services. Data sources that remain
+are listed with their licenses in `DATA_SOURCES.md`.

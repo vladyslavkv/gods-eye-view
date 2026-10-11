@@ -50,15 +50,14 @@ and map preferences through a scene-pack registry. The `scenes` export provides
 `createScenePackRegistry({ recipes, adapters })`; pass the result as `scenePacks`
 in the SceneDirector constructor options. Trusted adapters can supply
 `minimumHoldSec(states)`, `resolveVisual(shot, visual, isMapStackAvailable)` and
-`cancelMotion(getLayerModule)`. Default composition registers the existing Nepal
-presentation rules. These are code-level composition hooks, not executable
+`cancelMotion(getLayerModule)`. Default composition registers no presentation
+adapters. These are code-level composition hooks, not executable
 modules imported from scene files. Existing media-owner waits remain bounded.
 
 All authored scenes, assets, IDs, source links, attribution and existing JSON
-projects are preserved. The Nepal sequence remains the contribution introduced
-by @manjunath22466 in #590. Its clips use source links/embeds; comparison images
-and river coordinates are bundled. See the
-[event pack provenance](../public/events/bhote-koshi-2026/README.md).
+projects are preserved. The Nepal flood sequence (#590) and its event pack were
+removed in this fork because their bundled data is non-commercial; see
+[DATA_SOURCES.md](../DATA_SOURCES.md#removed-in-this-fork).
 
 ## Next changes, in order
 

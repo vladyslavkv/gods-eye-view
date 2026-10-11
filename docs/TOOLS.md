@@ -287,7 +287,6 @@ and the development server's internal routes. See SECURITY.md.
 | `get_wind` | `wind` | GFS or IFS model wind 10 m above ground at a location |
 | `get_recent_imagery` | `imagery` | The most recent clear Landsat/Sentinel-2 image of an area (VIIRS fallback) |
 | `find_infrastructure` | `infrastructure` | OpenStreetMap datacenters or dams in an area, nearest first (ODbL) |
-| `get_bhote_koshi_flood` | `events` | The 2026 Bhote Koshi flood: evidence trail in story order, flood path and imagery dates (CC BY-NC 4.0) |
 | `get_regional_brief` | `regional` | What and where a location is, its weather and recent headlines |
 | `get_cyclones` | `cyclones` | Active NHC/CPHC tropical cyclones, optionally in an area |
 | `get_fire_perimeters` | `perimeters` | Mapped WFIGS wildfire perimeters in an area, largest first |
