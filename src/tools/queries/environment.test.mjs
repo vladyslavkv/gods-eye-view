@@ -75,7 +75,7 @@ test('the regional brief returns place, weather and at most ten headlines', asyn
           kind: 'natural',
         },
         weather: conditions,
-        newsSource: 'Google News RSS',
+        newsSource: 'GDELT',
         articles: Array.from({ length: 12 }, (_, index) => ({
           title: `Story ${index}`,
           url: `https://news.example/${index}`,

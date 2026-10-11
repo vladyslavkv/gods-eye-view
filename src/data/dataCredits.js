@@ -170,13 +170,6 @@ export const DATA_CREDITS = [
       '(CC BY 4.0)',
   },
   {
-    key: 'google-news-rss',
-    html:
-      'Cockpit regional headlines: ' +
-      '<a href="https://policies.google.com/terms" target="_blank" rel="noopener">Google News RSS</a> ' +
-      '(location-matched article links; publisher terms apply)',
-  },
-  {
     key: 'gdelt',
     html:
       'Cockpit regional headlines: ' +

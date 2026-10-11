@@ -1,7 +1,4 @@
-import {
-  readResponseJsonCapped,
-  readResponseTextCapped,
-} from '../common/http.js';
+import { readResponseJsonCapped } from '../common/http.js';
 
 const REGIONAL_MAX_RESPONSE_BYTES = 2 * 1024 * 1024;
 
@@ -16,8 +13,8 @@ const REGIONAL_MAX_RESPONSE_BYTES = 2 * 1024 * 1024;
  * is in hand, and the same signal is handed to the reader so an abort stops the
  * read rather than just the connect.
  *
- * `redirect` is stated rather than inherited: feeds that legitimately redirect
- * (news RSS) follow, and a fixed API endpoint can be given 'error' so a
+ * `redirect` is stated rather than inherited: endpoints that legitimately
+ * redirect follow, and a fixed API endpoint can be given 'error' so a
  * redirect cannot steer the proxy at a destination this code never named.
  *
  * @param {string} url
@@ -49,8 +46,4 @@ function fetchRegionalJson(url, options = {}) {
   return fetchRegional(url, readResponseJsonCapped, options);
 }
 
-function fetchRegionalText(url, options = {}) {
-  return fetchRegional(url, readResponseTextCapped, options);
-}
-
-export { fetchRegionalJson, fetchRegionalText };
+export { fetchRegionalJson };

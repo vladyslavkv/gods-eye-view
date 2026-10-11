@@ -109,3 +109,31 @@ test('regional brief treats an all-source outage as total failure', () => {
     news: { status: 'unavailable' },
   }), true);
 });
+
+test('regional news reads GDELT only and degrades to no news source when it fails', async (t) => {
+  const { fetchRegionalNews } = await import(
+    '../../server/providers/regional/news.js'
+  );
+  const hosts = [];
+  t.mock.method(globalThis, 'fetch', async (url) => {
+    hosts.push(new URL(url).hostname);
+    return Response.json({
+      articles: [
+        { title: 'Austin update', url: 'https://example.com/a', domain: 'example.com' },
+      ],
+    });
+  });
+  const ready = await fetchRegionalNews({ locality: 'Austin' });
+  assert.equal(ready.status, 'ready');
+  assert.equal(ready.source, 'GDELT');
+  assert.equal(ready.articles.length, 1);
+  assert.deepEqual(hosts, ['api.gdeltproject.org']);
+  t.mock.method(globalThis, 'fetch', async () => new Response('', { status: 503 }));
+  assert.deepEqual(await fetchRegionalNews({ locality: 'Austin' }), {
+    status: 'unavailable',
+    query: 'Austin',
+    articles: [],
+    source: null,
+  });
+  assert.equal((await fetchRegionalNews({})).status, 'unavailable');
+});
