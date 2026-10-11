@@ -12,8 +12,7 @@
  * The screen-space label overlay is already decluttered
  * (LOCAL_OVERLAY_COHORT_LIMIT); this also bounds world-space stems and their
  * geometry/ground-sampling work. It does not reduce the number of materialized
- * entities. Submarine cables use their own renderer and are not changed here.
- * Performance must be measured against the current renderer, not inferred
+ * entities. Performance must be measured against the current renderer, not inferred
  * from the number of hidden stems.
  *
  * Sense is INVERTED relative to `cctvLod.js`: a CCTV metro view earns MORE
@@ -305,11 +304,11 @@ export function applyInfraEvictionGrace({
  * records one by one as they rotate behind the globe and admits nothing newly
  * visible, so the layer bleeds down to sparse-or-empty until motion stops.
  *
- * The fallback therefore samples camera travel at most this often. Shorter
- * than the cable layer's 2 s window because the walk that consumes it already
- * runs on a 450 ms cadence and the work it re-triggers is bounded by the
- * budget above; longer than that cadence so continuous motion recomputes on a
- * fixed clock rather than on every walk.
+ * The fallback therefore samples camera travel at most this often. The walk
+ * that consumes it already runs on a 450 ms cadence and the work it
+ * re-triggers is bounded by the budget above; the window is longer than that
+ * cadence so continuous motion recomputes on a fixed clock rather than on
+ * every walk.
  */
 export const INFRA_LOD_MOTION_PROBE_INTERVAL_MS = 1_000;
 
@@ -323,8 +322,7 @@ export const INFRA_LOD_MOTION_EPSILON_RATIO = 0.02;
 
 /**
  * Floor for that epsilon (m), so a camera near the surface still needs real
- * travel to spend a recompute. Matches the cable layer's flat
- * CABLE_SWEEP_MOTION_EPSILON_M.
+ * travel to spend a recompute.
  */
 export const INFRA_LOD_MOTION_EPSILON_MIN_M = 250;
 
@@ -377,8 +375,7 @@ export function infraLodMotionEpsilonM(
  * creeping camera probes on a fixed cadence instead of on every walk.
  *
  * Travel arrives SQUARED so the caller can hand over
- * `Cesium.Cartesian3.distanceSquared` and spend no sqrt on a per-walk probe,
- * the same trade `createCableReferenceSweepGate` makes.
+ * `Cesium.Cartesian3.distanceSquared` and spend no sqrt on a per-walk probe.
  *
  * @param {object} [input]
  * @param {number} [input.nowMs]

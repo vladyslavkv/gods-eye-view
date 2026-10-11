@@ -16,7 +16,6 @@ Bilawal Sidhu created and owns the following 17 GIFs and has authorized their in
 - `04-airport-distance.gif`
 - `15-global-radio-layer.gif`
 - `08-falcon9-replay.gif`
-- `09-undersea-cables.gif`
 - `07-helicopter-loops.gif`
 - `10-walking-route-flythrough.gif`
 - `08-boneyard.gif`

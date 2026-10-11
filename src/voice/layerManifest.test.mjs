@@ -68,7 +68,6 @@ test('tool enums are generated from the manifest', () => {
     tool('get_entity_context').parameters.properties.layerId.enum,
     [...VOICE_CONTEXT_LAYER_IDS],
   );
-  assert.ok(!VOICE_CONTEXT_LAYER_IDS.includes('telegeography-submarine-cables'), 'cables register no context records');
   assert.deepEqual(
     tool('analyst_query').parameters.properties.layers.items.enum,
     [...VOICE_QUERY_LAYER_IDS],
@@ -87,8 +86,7 @@ test('spoken aliases resolve to real layers, keep every legacy phrase and never 
     'street traffic': 'traffic', cameras: 'cctv', 'internet radio': 'radio', 'radio stations': 'radio',
     bikes: 'bikeshare', ais: 'ais-live-vessels', ships: 'ais-live-vessels', vessels: 'ais-live-vessels',
     'live vessels': 'ais-live-vessels', datacenters: 'local-datacenters', 'data centers': 'local-datacenters',
-    'data centres': 'local-datacenters', dams: 'local-dams', 'submarine cables': 'telegeography-submarine-cables',
-    cables: 'telegeography-submarine-cables', telegeography: 'telegeography-submarine-cables',
+    'data centres': 'local-datacenters', dams: 'local-dams',
     firms: 'local-firms', fires: 'local-firms', 'active fires': 'local-firms', alpr: 'alpr-cameras',
     'alpr cameras': 'alpr-cameras', 'flock cameras': 'alpr-cameras', 'license plate readers': 'alpr-cameras',
     'license plate cameras': 'alpr-cameras', 'plate readers': 'alpr-cameras', 'local-adsb': 'local-adsb',

@@ -286,7 +286,6 @@ and the development server's internal routes. See SECURITY.md.
 | `get_weather_map` | `weatherMaps` | The latest NOAA radar, satellite or lightning map image over an area |
 | `get_wind` | `wind` | GFS or IFS model wind 10 m above ground at a location |
 | `get_recent_imagery` | `imagery` | The most recent clear Landsat/Sentinel-2 image of an area (VIIRS fallback) |
-| `find_submarine_cables` | `cables` | TeleGeography cables and landing points by area or name (CC BY-NC-SA 3.0) |
 | `find_infrastructure` | `infrastructure` | OpenStreetMap datacenters or dams in an area, nearest first (ODbL) |
 | `get_bhote_koshi_flood` | `events` | The 2026 Bhote Koshi flood: evidence trail in story order, flood path and imagery dates (CC BY-NC 4.0) |
 | `get_regional_brief` | `regional` | What and where a location is, its weather and recent headlines |
