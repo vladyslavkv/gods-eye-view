@@ -2,7 +2,7 @@
  * @module routeSteps
  * @description Turn-by-turn steps from an OSRM route, in plain English.
  *
- * OSRM (the FOSSGIS servers behind `/api/route`) returns each step as a
+ * OSRM (the configured server behind `/api/route`) returns each step as a
  * maneuver `type` + `modifier` (+ roundabout `exit`) and the road name; it
  * does not phrase instructions. This module does, with the same vocabulary
  * OSRM's own text-instructions package uses so a reader of either feels at

@@ -281,12 +281,17 @@ try {
     const html = document.body.innerHTML;
     const open = /Data provided by/i.test(text);
     const entry = [...document.querySelectorAll('li')].find((node) =>
-      /OSRM on the FOSSGIS servers/i.test(node.textContent),
+      /Routing \(voice routes and Directions\), when configured: OSRM/i.test(
+        node.textContent,
+      ),
     );
     entry?.scrollIntoView({ block: 'center' });
     return {
       open,
-      routing: /OSRM on the FOSSGIS servers/i.test(text),
+      routing:
+        /Routing \(voice routes and Directions\), when configured: OSRM/i.test(
+          text,
+        ),
       osm: /OpenStreetMap contributors/i.test(text),
       fixTheMap: /openstreetmap\.org\/fixthemap/.test(html),
     };
