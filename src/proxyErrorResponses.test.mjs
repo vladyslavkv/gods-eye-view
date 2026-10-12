@@ -163,12 +163,40 @@ test('ADSBDB unexpected failures hide details', async () => {
   assert.deepEqual(JSON.parse(res.body), { error: 'adsbdb proxy error' });
 });
 
+const adsbdbOptIn = { process: { cwd: () => '/fixture', env: { ADSBDB_ENABLED: '1' } } };
+
 test('ADSBDB retains validation and missing-aircraft semantics', async () => {
-  const app = fixture('adsbdbProxy');
-  assert.equal((await app.request('/route/!')).status, 400);
+  const app = fixture('adsbdbProxy', adsbdbOptIn);
   assert.equal((await app.request('/type/nope')).status, 400);
   assert.equal((await app.request('/unknown')).status, 404);
   const absent = await app.request('/type/abcdef');
   assert.equal(absent.status, 200);
   assert.deepEqual(JSON.parse(absent.body), { found: false });
+});
+
+test('should not serve adsbdb callsign routes when asked for one', async () => {
+  const calls = [];
+  const app = fixture('adsbdbProxy', { ...adsbdbOptIn, fetch: async (url) => { calls.push(url); return Response.json({}); } });
+  assert.equal((await app.request('/route/UAL123')).status, 404);
+  assert.deepEqual(calls, []);
+});
+
+test('should answer disabled without contacting adsbdb when ADSBDB_ENABLED is unset', async () => {
+  const calls = [];
+  const app = fixture('adsbdbProxy', { fetch: async (url) => { calls.push(url); return Response.json({}); } });
+  const res = await app.request('/type/abcdef');
+  assert.equal(res.status, 200);
+  assert.deepEqual(JSON.parse(res.body), { found: false, disabled: true, reason: 'not licensed for commercial use in this build' });
+  assert.deepEqual(calls, []);
+});
+
+test('should look an aircraft type up when ADSBDB_ENABLED=1', async () => {
+  const calls = [];
+  const app = fixture('adsbdbProxy', { ...adsbdbOptIn, fetch: async (url) => {
+    calls.push(url);
+    return Response.json({ response: { aircraft: { icao_type: 'B738', manufacturer: 'Boeing', type: '737-800', registration: 'N1' } } });
+  } });
+  const res = await app.request('/type/abcdef');
+  assert.deepEqual(JSON.parse(res.body), { found: true, typeCode: 'B738', typeName: 'Boeing 737-800', registration: 'N1' });
+  assert.deepEqual(calls, ['https://api.adsbdb.com/v0/aircraft/abcdef']);
 });

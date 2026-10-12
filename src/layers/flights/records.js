@@ -197,6 +197,12 @@ export class FlightRecords {
       !!prevMeta && (prevMeta.onGround === true) !== onGround;
     // Store flight metadata for click-to-track labels
     const cat = stickyNumber(category, prevMeta?.category, null);
+    // The feed's own type/registration (adsb.lol `t`/`r`); adsbdb enrichment,
+    // when enabled, overwrites them in its callback.
+    const typeCode =
+      stickyText(observation.typeCode, prevMeta?.typeCode) || null;
+    const registration =
+      stickyText(observation.registration, prevMeta?.registration) || null;
     const meta = {
       sourceReference: observation.reference,
       observedReceiptMs: Date.now(),
@@ -215,11 +221,8 @@ export class FlightRecords {
       velocity: stickyNumber(velocity, prevMeta?.velocity, 0),
       true_track: stickyNumber(true_track, prevMeta?.true_track, 0),
       category: cat,
-      // An adsbdb-enriched type code outranks the coarse emitter category.
-      klass: classifyAircraft({
-        typeCode: prevMeta?.typeCode ?? null,
-        category: cat,
-      }),
+      // A known type code outranks the coarse emitter category.
+      klass: classifyAircraft({ typeCode, category: cat }),
       turnRateDps: prevMeta?.turnRateDps || 0,
       verticalRate: stickyNumber(vertical_rate, prevMeta?.verticalRate, null),
       // Analyst seam: state-vector origin_country (state[2]) — additive, sticky
@@ -235,10 +238,10 @@ export class FlightRecords {
         prevMeta?.lastContactEpochMs,
         null,
       ),
+      typeCode,
+      registration,
       // adsbdb enrichment — written by the enrichment callbacks, carried across polls:
-      typeCode: prevMeta?.typeCode ?? null,
       typeName: prevMeta?.typeName ?? null,
-      registration: prevMeta?.registration ?? null,
       airline: prevMeta?.airline ?? null,
       route: prevMeta?.route ?? null,
       // The RAW poll fix lat/lon (this tick's state-vector

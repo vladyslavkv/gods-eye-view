@@ -4,6 +4,7 @@ import {
   normalizeAdsbLolAircraftState,
   normalizeAdsbLolPointResponse,
 } from './adsbLolFallback.js';
+import { normalizeStateVectorAircraft } from '../sources/live/aircraft.js';
 
 test('normalizes adsb.lol units into a state vector', () => {
   const state = normalizeAdsbLolAircraftState({
@@ -48,4 +49,26 @@ test('keeps grounded fallback contacts and rejects rows without positions', () =
   assert.equal(normalized.states.length, 1);
   assert.equal(normalized.states[0][7], null);
   assert.equal(normalized.states[0][8], true);
+});
+
+test('should carry adsb.lol type and registration when the row reports them', () => {
+  const state = normalizeAdsbLolAircraftState(
+    { hex: 'a1b2c3', lat: 30, lon: -97, t: 'B738', r: 'N12345' },
+    1000,
+  );
+  assert.equal(state[18], 'B738');
+  assert.equal(state[19], 'N12345');
+  const observation = normalizeStateVectorAircraft(state);
+  assert.equal(observation.typeCode, 'B738');
+  assert.equal(observation.registration, 'N12345');
+});
+
+test('should leave type and registration empty when adsb.lol omits them', () => {
+  const state = normalizeAdsbLolAircraftState(
+    { hex: 'a1b2c3', lat: 30, lon: -97 },
+    1000,
+  );
+  const observation = normalizeStateVectorAircraft(state);
+  assert.equal(observation.typeCode, null);
+  assert.equal(observation.registration, null);
 });

@@ -77,6 +77,10 @@ export function normalizeAdsbLolAircraftState(aircraft, nowSeconds) {
     aircraft?.spi === 1,
     0,
     emitterCategory(aircraft?.category),
+    // Beyond the OpenSky layout: adsb.lol's own ICAO type designator and
+    // registration (ODbL), so type display and 3D models need no enrichment.
+    String(aircraft?.t || '').trim() || null,
+    String(aircraft?.r || '').trim() || null,
   ];
 }
 

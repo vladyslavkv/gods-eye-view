@@ -6,8 +6,6 @@ import {
 } from '../flights/policy.js';
 
 const ICAO = /^[0-9a-f]{6}$/i;
-/** Airline-style callsigns only (LLL + digit); GA tails do not resolve. */
-const AIRLINE_CALLSIGN = /^[A-Z]{3}\d/;
 /** Bound on the per-session metadata map. */
 const META_LIMIT = 2_000;
 
@@ -32,7 +30,7 @@ export function localAdsbClass(record, meta = null) {
  * adsbdb enrichment for Local ADS-B through the same cached proxy and the same
  * rules as the public Flights layer: each key is asked for at most once per
  * session, at most four requests are in flight and dispatches are dripped
- * 200 ms apart. Only the selected aircraft (type + route) and aircraft that
+ * 200 ms apart. Only the selected aircraft and aircraft that
  * are about to render as 3D models (type) are ever looked up — never one
  * request per contact per tick.
  * @param {object} options
@@ -114,7 +112,7 @@ export function createLocalAdsbEnrichment({
     },
 
     /**
-     * Ask for the aircraft's type (and, when selected, its route).
+     * Ask for the aircraft's type.
      * @param {object} record Local ADS-B record.
      * @param {{selected?: boolean}} [options]
      */
@@ -132,25 +130,6 @@ export function createLocalAdsbEnrichment({
             stickyText(data.registration, value.registration) || null;
         },
         selected,
-      );
-      const callsign = String(record.callsign || '')
-        .trim()
-        .toUpperCase();
-      if (!selected || !AIRLINE_CALLSIGN.test(callsign)) return;
-      enqueue(
-        `r:${callsign}`,
-        { kind: 'route', id: callsign },
-        (data) => {
-          const value = entry(icao);
-          value.airline = stickyText(data.airline, value.airline) || null;
-          if (data.origin && data.destination)
-            value.route = {
-              callsign,
-              origin: data.origin,
-              destination: data.destination,
-            };
-        },
-        true,
       );
     },
 

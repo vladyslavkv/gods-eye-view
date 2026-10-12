@@ -44,6 +44,7 @@ export function createFlightSource({
   fetchImpl = defaultFetch,
   now = () => Date.now(),
 } = {}) {
+  let enrichmentDisabled = null;
   return {
     label: 'Flights',
     async getSnapshot(query = {}, { signal } = {}) {
@@ -86,8 +87,11 @@ export function createFlightSource({
       return readsbTrack(payload);
     },
     async getEnrichment(query, { signal } = {}) {
-      if (!['type', 'route'].includes(query.kind))
+      if (query.kind !== 'type')
         throw new LiveSourceError('unsupported', 'Enrichment unavailable');
+      // An operator without ADSBDB_ENABLED=1 answers `disabled` to every
+      // lookup; remember it so a busy sky costs one request, not one per plane.
+      if (enrichmentDisabled) return enrichmentDisabled;
       const { response, payload } = await readResponse(
         fetchImpl,
         `/api/adsbdb/${query.kind}/${encodeURIComponent(query.id)}`,
@@ -95,6 +99,7 @@ export function createFlightSource({
         'adsbdb',
       );
       if (!response.ok) throw httpError(response, 'adsbdb');
+      if (payload?.disabled === true) enrichmentDisabled = payload;
       return payload;
     },
   };

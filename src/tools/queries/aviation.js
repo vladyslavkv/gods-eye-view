@@ -323,29 +323,31 @@ export const getAircraftTrack = defineTool({
 
 export const getAircraftInfo = defineTool({
   name: 'get_aircraft_info',
-  title: 'Aircraft type and route',
+  title: 'Aircraft type',
   description:
-    'Look up an aircraft type and registration by ICAO 24-bit address, and ' +
-    'a flight route by callsign, from adsbdb. Give either or both.',
+    'Look up an aircraft type and registration by ICAO 24-bit address from ' +
+    'adsbdb, when this build enables adsbdb.',
   inputSchema: {
     type: 'object',
-    properties: { icao24: ICAO24_SCHEMA, callsign: CALLSIGN_SCHEMA },
+    properties: { icao24: ICAO24_SCHEMA },
+    required: ['icao24'],
     additionalProperties: false,
   },
   requires: ['aircraft'],
   async run(args, { services, signal }) {
-    if (args.icao24 == null && args.callsign == null)
-      throw new ToolError('invalid_arguments', 'Give icao24, callsign or both');
-    const lookup = (kind, id) =>
-      id == null
-        ? null
-        : services.aircraft.getEnrichment({ kind, id }, { signal });
-    const icao24 = args.icao24?.toLowerCase();
-    const callsign = args.callsign?.toUpperCase();
-    const [type, route] = await Promise.all([
-      lookup('type', icao24),
-      lookup('route', callsign),
-    ]);
+    if (args.icao24 == null)
+      throw new ToolError('invalid_arguments', 'Give icao24');
+    const icao24 = args.icao24.toLowerCase();
+    const type = await services.aircraft.getEnrichment(
+      { kind: 'type', id: icao24 },
+      { signal },
+    );
+    if (type?.disabled === true)
+      return {
+        summary:
+          'Aircraft type lookup (adsbdb) is disabled — not licensed for commercial use in this build.',
+        data: { aircraft: null, disabled: true },
+      };
     const aircraft = type?.found
       ? {
           icao24,
@@ -354,40 +356,11 @@ export const getAircraftInfo = defineTool({
           registration: type.registration ?? null,
         }
       : null;
-    const airport = (value) =>
-      value
-        ? {
-            code: value.code || null,
-            name: value.name || null,
-            lat: value.lat ?? null,
-            lon: value.lon ?? null,
-          }
-        : null;
-    const flight = route?.found
-      ? {
-          callsign,
-          airline: route.airline ?? null,
-          origin: airport(route.origin),
-          destination: airport(route.destination),
-        }
-      : null;
-    const parts = [];
-    if (icao24)
-      parts.push(
-        aircraft
-          ? `aircraft ${icao24} is ${aircraft.type_name || aircraft.type_code || 'an aircraft of unknown type'}${aircraft.registration ? ` (${aircraft.registration})` : ''}`
-          : `no type is known for ${icao24}`,
-      );
-    if (callsign)
-      parts.push(
-        flight
-          ? `flight ${callsign} flies ${flight.origin?.code || flight.origin?.name} to ${flight.destination?.code || flight.destination?.name}${flight.airline ? ` (${flight.airline})` : ''}`
-          : `no route is known for ${callsign}`,
-      );
-    const summary = parts.join('; ');
     return {
-      summary: `${summary.charAt(0).toUpperCase()}${summary.slice(1)}.`,
-      data: { aircraft, route: flight },
+      summary: aircraft
+        ? `Aircraft ${icao24} is ${aircraft.type_name || aircraft.type_code || 'an aircraft of unknown type'}${aircraft.registration ? ` (${aircraft.registration})` : ''}.`
+        : `No type is known for ${icao24}.`,
+      data: { aircraft },
     };
   },
 });

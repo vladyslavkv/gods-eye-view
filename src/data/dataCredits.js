@@ -103,13 +103,10 @@ export const DATA_CREDITS = [
   {
     key: 'adsbdb',
     html:
-      'Aircraft type, registration &amp; flight routes: ' +
+      'Aircraft type &amp; registration (when enabled): ' +
       '<a href="https://www.adsbdb.com" target="_blank" rel="noopener">adsbdb</a> ' +
       '· aircraft data from PlaneBase · ICAO-to-N-number conversion by ' +
-      'Guillaume Michel · route data is the work of ' +
-      'David Taylor, Edinburgh, and Jim Mason, Glasgow, and may not be ' +
-      'copied, published, or incorporated into other databases without the ' +
-      'explicit permission of David J Taylor, Edinburgh',
+      'Guillaume Michel',
   },
   {
     key: 'aisstream',

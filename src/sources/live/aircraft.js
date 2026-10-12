@@ -27,8 +27,8 @@ export function normalizeStateVectorAircraft(row) {
     courseDeg: finite(row[10]),
     verticalRateMps: finite(row[11]),
     category: finite(row[17]),
-    typeCode: null,
-    registration: null,
+    typeCode: cleanText(row[18]) || null,
+    registration: cleanText(row[19]) || null,
     operator: null,
   };
 }
