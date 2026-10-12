@@ -323,3 +323,33 @@ test('a followed aircraft owns the camera, and cockpit view is entered after it'
     /no cockpit view/,
   );
 });
+
+test('an embedded page with ui=1 keeps the full interface and still takes views', async () => {
+  const posted = [];
+  const parent = { postMessage: (message) => posted.push(message) };
+  const windowRef = new EventTarget();
+  windowRef.parent = parent;
+  windowRef.document = { body: { classList: new Set() } };
+  windowRef.document.body.classList.add = Set.prototype.add;
+  const shell = {
+    initialRestorePromise: Promise.resolve(),
+    clean: null,
+    setCleanView(value) {
+      this.clean = value;
+    },
+  };
+  const { run } = recorder();
+  const remove = installViews({
+    shell,
+    viewer: fakeViewer(),
+    dataManager: fakeLayers(new Set()),
+    run,
+    location: { search: '?embed=1&ui=1', hash: '' },
+    windowRef,
+  });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.equal(shell.clean, null);
+  assert.equal(windowRef.document.body.classList.has('ui-embed'), false);
+  assert.deepEqual(posted, [{ type: 'gev:ready' }]);
+  remove();
+});

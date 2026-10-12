@@ -40,6 +40,11 @@ export function isEmbedded(location = globalThis.location) {
   );
 }
 
+/** Whether an embedded page asked to keep the app's own interface (`ui=1`). */
+export function wantsFullUi(location = globalThis.location) {
+  return new URLSearchParams(location?.search || '').get('ui') === '1';
+}
+
 /** Whether a panel page loaded the app into itself. */
 export function isEmbeddedInline() {
   return globalThis.GEV_EMBED_INLINE === true;
@@ -241,8 +246,13 @@ export function installViews({
     });
   if (!isEmbedded(location)) return () => {};
 
-  windowRef.document.body.classList.add('ui-embed');
-  shell.setCleanView?.(true);
+  // `ui=1` keeps the app's own interface (layers, HUD, search) for a host
+  // that shows the globe as a full tool rather than a picture; views still
+  // arrive from the host either way.
+  if (!wantsFullUi(location)) {
+    windowRef.document.body.classList.add('ui-embed');
+    shell.setCleanView?.(true);
+  }
   const stopRendering = isEmbeddedInline()
     ? keepPanelRendering(viewer, { windowRef })
     : () => {};
