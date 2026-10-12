@@ -3983,3 +3983,46 @@ test('parked transit reprojects held and reported courses at the bounded camera 
     'selected unknown course also stays screen-up',
   );
 });
+
+const MINNEAPOLIS = { lat: 44.9778, lon: -93.265 };
+const flush = async () => {
+  for (let i = 0; i < 10; i += 1)
+    await new Promise((resolve) => setImmediate(resolve));
+};
+
+test('should say Metro Transit is not licensed when the view sits in its region', async (t) => {
+  const app = harness(t, { at: MINNEAPOLIS });
+  app.layer.enable(app.viewer);
+  await flush();
+  await app.layer.update();
+  assert.equal(
+    app.requested.some((url) => url.includes('metrotransit')),
+    false,
+  );
+  assert.equal(
+    app.layer.getStats().coverage,
+    'Metro Transit disabled — not licensed for commercial use in this build',
+  );
+});
+
+test('should poll Metro Transit when the server catalog serves it', async (t) => {
+  const app = harness(t, { at: MINNEAPOLIS });
+  app.serve('feeds', () => ({
+    status: 200,
+    body: { feeds: [{ id: 'mbta' }, { id: 'metrotransit-msp' }] },
+  }));
+  app.serve('metrotransit-msp', () => ({
+    status: 200,
+    body: snapshot(
+      'metrotransit-msp',
+      'Metro Transit',
+      [vehicle('bus-1', 44.97, -93.26, Date.now() / 1000)],
+      { fetchedAt: Date.now() },
+    ),
+  }));
+  app.layer.enable(app.viewer);
+  await flush();
+  await app.layer.update();
+  assert.ok(app.requested.includes('/api/transit/vehicles/metrotransit-msp'));
+  assert.equal(app.layer.getStats().coverage, 'Metro Transit 1');
+});

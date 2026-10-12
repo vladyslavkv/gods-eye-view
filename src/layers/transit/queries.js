@@ -10,6 +10,7 @@ import {
   TRANSIT_ENABLED_FEEDS,
   getRegisteredTransitFeed,
 } from '../../data/transitFeeds.js';
+import { disabledNotLicensed } from '../../data/commercialUse.js';
 import { transitModeTier } from '../../data/transitPresetStyle.js';
 
 /**
@@ -223,9 +224,11 @@ export function createQueries({ state, parts }) {
           error: null,
           source: 'GTFS-RT',
           status: 'zoom-in',
-          coverage: state._altitudeGateOpen
-            ? `No feed here yet · ${TRANSIT_ENABLED_FEEDS.length} regions available`
-            : `Fly below ${Math.round(ACTIVATION_ALTITUDE_M / 1000).toLocaleString()} km to a covered region`,
+          coverage: state._unlicensedInRange?.length
+            ? disabledNotLicensed(state._unlicensedInRange.join(', '))
+            : state._altitudeGateOpen
+              ? `No feed here yet · ${TRANSIT_ENABLED_FEEDS.length} regions available`
+              : `Fly below ${Math.round(ACTIVATION_ALTITUDE_M / 1000).toLocaleString()} km to a covered region`,
         };
       }
       // Age is shown by the same rule the row state uses, so the text and the

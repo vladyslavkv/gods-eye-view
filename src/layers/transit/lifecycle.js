@@ -195,6 +195,7 @@ export function createLifecycle({ state, services, parts }) {
         );
       }
       parts.viewport.runProximityCheck();
+      void parts.viewport.loadServedFeeds();
       restoreSpriteOrder(viewer);
     },
 
