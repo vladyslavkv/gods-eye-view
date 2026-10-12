@@ -126,7 +126,7 @@ export function buildCapabilitySummary(credentials) {
       ? 'Google Photorealistic 3D Tiles (direct)'
       : route === 'google-ion'
         ? 'Google Photorealistic 3D Tiles through Cesium ion; Bing and world-terrain stacks available'
-        : 'Esri World Imagery (keyless satellite basemap) with keyless terrain',
+        : 'NASA Blue Marble (GIBS, keyless) with keyless terrain; Esri World Imagery only with ESRI_IMAGERY_LICENSED=1',
     flights: 'adsb.lol keyless regional feed',
     voice: configured('OPENAI_API_KEY')
       ? 'available'

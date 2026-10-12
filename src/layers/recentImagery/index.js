@@ -47,9 +47,9 @@ export const SPLIT_PUBLISH_MS = 400;
 export const MODES = Object.freeze(['image', 'basemap', 'ab']);
 
 const COMPARISON_IN_USE = 'Comparison in use by another scene';
-const COMPARISON_UNAVAILABLE = 'Esri map unavailable · no swipe';
+const COMPARISON_UNAVAILABLE = 'Globe map unavailable · no swipe';
 const COMPARISON_NEEDS_GLOBE = 'Swipe needs a globe map';
-const ESRI_KEPT = 'Imagery stays on Esri · CLEAR to use Google 3D';
+const GLOBE_KEPT = 'Imagery stays on globe · CLEAR to use Google 3D';
 /** ZOOM IN's flight time, in seconds. */
 const ZOOM_FIT_SECONDS = 1.2;
 const DEFAULT_SPLIT = 0.5;
@@ -389,7 +389,7 @@ export function createRecentImageryLayer({
   function releaseComparison() {
     const lease = _lease;
     forgetLease();
-    if (_notice === ESRI_KEPT) _notice = null;
+    if (_notice === GLOBE_KEPT) _notice = null;
     if (!lease) return;
     const releasing = Promise.resolve()
       .then(() => lease.release())
@@ -485,12 +485,12 @@ export function createRecentImageryLayer({
     if (automatic) {
       _droppedByFallback = true;
       _comparisonError = COMPARISON_UNAVAILABLE;
-      if (_notice === ESRI_KEPT) _notice = null;
+      if (_notice === GLOBE_KEPT) _notice = null;
       return true;
     }
     acquireComparison();
-    if (_lease) _notice = ESRI_KEPT;
-    else if (_notice === ESRI_KEPT) _notice = null;
+    if (_lease) _notice = GLOBE_KEPT;
+    else if (_notice === GLOBE_KEPT) _notice = null;
     return true;
   }
 

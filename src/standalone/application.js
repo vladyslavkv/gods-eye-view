@@ -15,6 +15,7 @@ let constructed = false;
 export function createStandaloneApplication({
   googleApiKey,
   cesiumToken,
+  esriImageryLicensed = false,
   geospatial = {},
   voice = {},
   sources = {},
@@ -46,6 +47,7 @@ export function createStandaloneApplication({
         // app's server when it offers them.
         googleTokens: googleApiKey ? null : createGoogleTokenSource(),
         cesiumToken,
+        mapOptions: { esriImageryLicensed },
         loaderStatus,
       });
       catalog = createStandaloneCatalog({

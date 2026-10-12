@@ -848,6 +848,11 @@
   gap: 4px;
 }
 
+/* Six tiles (licensed Esri) clip "Esri Satellite" on one row: two of three. */
+.map-stack-chip-row:has(> .map-stack-chip:nth-child(6)) {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .map-stack-chip {
   display: inline-flex;
   align-items: baseline;

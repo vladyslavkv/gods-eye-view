@@ -54,3 +54,34 @@ test('registered pack rules apply to another source without editing the Director
   assert.equal(cancelled, 1);
   assert.deepEqual(shot, before);
 });
+
+test('should put an imagery-comparison beat on Blue Marble when Esri is unavailable and on Esri when it is licensed', () => {
+  const recipe = {
+    id: 'compare',
+    runtimeControlsByBeat: { swipe: { imageryComparison: true } },
+    standaloneSurfaceBeatIds: ['surface'],
+  };
+  const packs = createScenePackRegistry({ recipes: [recipe] });
+  const shotFor = (beatId) => ({
+    id: beatId,
+    sourcePackId: 'compare',
+    visual: { style: 'normal' },
+    layers: {
+      compare: {
+        enabled: true,
+        params: { presentation: 'scene-beat', beatId },
+      },
+    },
+  });
+  const unlicensed = (id) => id !== 'esri-imagery';
+  for (const beat of ['swipe', 'surface']) {
+    assert.equal(
+      visualStateForShot(shotFor(beat), packs, unlicensed).mapStack,
+      'blue-marble',
+    );
+    assert.equal(
+      visualStateForShot(shotFor(beat), packs, () => true).mapStack,
+      'esri-imagery',
+    );
+  }
+});

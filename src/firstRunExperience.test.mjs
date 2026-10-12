@@ -675,10 +675,11 @@ test('the voice TOOL SCHEMA matches the pinned contract — the mission mapping 
   // list descriptions; the missions still ride existing tools.
   // Street Level adds toggle enum values and the generated alias hint.
   // The removed non-commercial cable layer drops its enum value and aliases.
-  assert.equal(block.length, 29671, 'serialized tool schema length drifted');
+  // The keyless NASA Blue Marble landing adds a map-stack value and hint.
+  assert.equal(block.length, 29743, 'serialized tool schema length drifted');
   assert.equal(
     crypto.createHash('sha256').update(block).digest('hex'),
-    '8270a10b5c63e237163dcab5d043cc628af1aad3276b296606d3f813a3f0c2a3',
+    '3e00023defe44d6fefdaab5538e3d2c7533a5a5c0cf494add081379045ca482e',
     'the first-run missions must ride EXISTING tools: no schema edit, no cache bust',
   );
   const instructions = fs.readFileSync(new URL('../server/providers/openai/instructions.js', import.meta.url), 'utf8');

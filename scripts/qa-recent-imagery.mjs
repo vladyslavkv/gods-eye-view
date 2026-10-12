@@ -3,10 +3,10 @@
  * Rendered acceptance for DATA ▸ Recent Imagery against the real NASA
  * endpoints (CMR catalog, GIBS tiles, Worldview snapshots): the rail panel,
  * USE VIEW and the live preview, the three modes (IMAGE, VS BASEMAP, A / B)
- * with their pins, the divider and the Esri surface on Google 3D, Escape
+ * with their pins, the divider and the comparison globe on Google 3D, Escape
  * order, the oversized-view refusal and ZOOM IN, CLEAR, the share link,
  * map-switch rebind (a manual switch to Google 3D keeps the imagery on
- * Esri), CCTV stability at 900 and 700 px, scroll preservation, a
+ * the comparison globe), CCTV stability at 900 and 700 px, scroll preservation, a
  * layout-shift measurement across every transition, and disable.
  *
  * Run: start the app (`./scripts/dev-fresh.sh`) and
@@ -279,8 +279,7 @@ const tilesSettled = () =>
   });
 const backOnPhotoreal = () =>
   until(() => window.__riQa.activeStack() === 'photoreal');
-const onEsri = () =>
-  until(() => window.__riQa.activeStack() === 'esri-imagery');
+const onEsri = () => until(() => window.__riQa.activeStack() === 'blue-marble');
 const ownedIs = (count) =>
   until((n) => window.__riQa.owned() === n, count, 10_000);
 
@@ -533,19 +532,19 @@ try {
     `${current.rowA} | ${current.rowB}`,
   );
   onPhotorealOnly(
-    'on Google 3D a shown image borrows the Esri surface',
+    'on Google 3D a shown image borrows the comparison globe',
     await onEsri(),
   );
   const esriNote = await until(
     () =>
       document.getElementById('ri-notice-text')?.textContent ===
-      'Imagery on Esri · Google 3D returns when cleared',
+      'Imagery on globe · Google 3D returns when cleared',
     undefined,
     5_000,
   );
   current = await state();
   onPhotorealOnly(
-    'the notice says the imagery is on Esri until cleared',
+    'the notice says the imagery is on the comparison globe until cleared',
     esriNote,
     current.noticeText,
   );
@@ -722,8 +721,8 @@ try {
     current.rowB,
   );
   onPhotorealOnly(
-    'the swipe runs on Esri',
-    current.activeStack === 'esri-imagery',
+    'the swipe runs on the comparison globe',
+    current.activeStack === 'blue-marble',
     current.activeStack,
   );
   check(
@@ -814,8 +813,8 @@ try {
     current.rowB,
   );
   onPhotorealOnly(
-    'the A / B swipe runs on Esri',
-    current.activeStack === 'esri-imagery',
+    'the A / B swipe runs on the comparison globe',
+    current.activeStack === 'blue-marble',
     current.activeStack,
   );
   check(
@@ -883,8 +882,8 @@ try {
     }),
   );
   onPhotorealOnly(
-    'A alone stays on Esri',
-    current.activeStack === 'esri-imagery',
+    'A alone stays on the comparison globe',
+    current.activeStack === 'blue-marble',
     current.activeStack,
   );
   await checkLayout('B unpinned');
@@ -1098,7 +1097,7 @@ try {
   onPhotorealOnly('CLEAR hands Google 3D back', await backOnPhotoreal());
   await wait(1_500);
   onPhotorealOnly(
-    'after CLEAR the layer does not take Esri again',
+    'after CLEAR the layer does not take the comparison globe again',
     (await page.evaluate(() => window.__riQa.activeStack())) === 'photoreal',
   );
   await checkLayout('cleared');
@@ -1141,21 +1140,22 @@ try {
       host,
       10_000,
     );
-  if (photoreal && stacks.includes('esri-imagery')) {
-    check('the preview sits on the Esri globe', await drapeOn('globe'));
-    // While a day is shown the imagery keeps Esri: a manual switch to
+  if (photoreal && stacks.includes('blue-marble')) {
+    check('the preview sits on the comparison globe', await drapeOn('globe'));
+    // While a day is shown the imagery keeps the comparison globe: a manual switch to
     // Google 3D is answered at once with a new lease.
     await setStack('photoreal');
     const kept = (await onEsri()) && (await drapeOn('globe'));
     current = await state();
     check(
-      'switching to Google 3D by hand while a day is shown keeps the imagery on the Esri globe',
+      'switching to Google 3D by hand while a day is shown keeps the imagery on the comparison globe',
       kept && current.diagnostics.host === 'globe',
       `${hostsDetail(current)} stack=${current.activeStack}`,
     );
     check(
-      'the notice says the imagery stays on Esri until CLEAR, and fits',
-      current.noticeText === 'Imagery stays on Esri · CLEAR to use Google 3D' &&
+      'the notice says the imagery stays on the comparison globe until CLEAR, and fits',
+      current.noticeText ===
+        'Imagery stays on globe · CLEAR to use Google 3D' &&
         (await page.evaluate(() => {
           const text = document.getElementById('ri-notice-text');
           return text.scrollWidth <= text.clientWidth;
@@ -1164,9 +1164,9 @@ try {
     );
     await wait(1_500);
     check(
-      'Esri holds after the re-lease: no switch loop',
+      'The comparison globe holds after the re-lease: no switch loop',
       (await page.evaluate(() => window.__riQa.activeStack())) ===
-        'esri-imagery',
+        'blue-marble',
     );
     // The divider survives a manual switch too.
     await clickMode('basemap');
@@ -1456,7 +1456,7 @@ try {
   onPhotorealOnly('disabling hands Google 3D back', await backOnPhotoreal());
   await wait(1_500);
   onPhotorealOnly(
-    'disabled, the layer never takes Esri again',
+    'disabled, the layer never takes the comparison globe again',
     (await page.evaluate(() => window.__riQa.activeStack())) === 'photoreal',
   );
   await shot('09-disabled');

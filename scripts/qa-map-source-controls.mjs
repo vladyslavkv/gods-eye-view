@@ -80,10 +80,10 @@ try {
     'the public map action uses the same component and truthful result',
     await page.evaluate(async () => {
       const manager = window.__godsEyeView.styleManager;
-      const result = await manager.setMapStack('esri-imagery');
+      const result = await manager.setMapStack('blue-marble');
       const active = manager.mapStackController.getActiveId();
       return (
-        window.__qaMapSelections.at(-1) === 'esri-imagery' &&
+        window.__qaMapSelections.at(-1) === 'blue-marble' &&
         manager._mapStackChips.querySelector('[aria-pressed="true"]')?.dataset
           .stackId === active &&
         (result.ok || !!manager.mapStackController.getState().lastError)
@@ -189,7 +189,7 @@ try {
       const before = window.__qaMapSelections.length;
       manager._mapSourceControls.destroy();
       manager._mapStackChips.querySelector('[data-stack-id="osm"]').click();
-      const result = await manager._mapSourceControls.select('esri-imagery');
+      const result = await manager._mapSourceControls.select('blue-marble');
       return result === null && window.__qaMapSelections.length === before;
     }),
   );

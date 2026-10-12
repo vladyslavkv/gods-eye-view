@@ -274,6 +274,11 @@ test('Map Source uses five compact tiles in the bottom Visual Presets tray', () 
     /\.map-stack-chip-row\s*\{[\s\S]*?grid-template-columns:\s*repeat\(5, minmax\(0, 1fr\)\);/,
     'the desktop source selector keeps all five tiles on one row',
   );
+  assert.match(
+    css,
+    /\.map-stack-chip-row:has\(> \.map-stack-chip:nth-child\(6\)\)\s*\{\s*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\);/,
+    'a sixth tile (licensed Esri) lays the row out as two rows of three',
+  );
 });
 
 test('expanded right panels highlight the title divider without changing collapsed launchers', () => {

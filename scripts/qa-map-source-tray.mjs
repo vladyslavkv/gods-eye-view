@@ -271,9 +271,9 @@ try {
     controls: document.getElementById('control-panel-toggle')?.getAttribute('aria-controls'),
   }));
   check(
-    'exact five-source presentation; the retired left Map Stack panel is gone',
+    'exact six-source presentation; the retired left Map Stack panel is gone',
     JSON.stringify(presentation.ids) === JSON.stringify([
-      'photoreal', 'bing-aerial', 'bing-labels', 'esri-imagery', 'osm',
+      'photoreal', 'bing-aerial', 'bing-labels', 'esri-imagery', 'osm', 'blue-marble',
     ]) && !presentation.retiredPanel,
     JSON.stringify(presentation),
   );
@@ -283,20 +283,20 @@ try {
     JSON.stringify(presentation),
   );
 
-  const esriTileFailureFallback = await page.evaluate(async () => {
+  const keylessTileFailureFallback = await page.evaluate(async () => {
     const styleManager = window.__godsEyeView.styleManager;
     const controller = styleManager.mapStackController;
-    await styleManager._setMapStack('esri-imagery', { syncShare: false });
+    await styleManager._setMapStack('blue-marble', { syncShare: false });
     // Cesium updates on-screen credits on a rendered frame, after setStack
     // resolves. Observe that boundary before checking the visible source.
     const creditDeadline = performance.now() + 5000;
-    while (!document.body.innerText.includes('Powered by Esri') && performance.now() < creditDeadline) {
+    while (!document.body.innerText.includes('NASA GIBS') && performance.now() < creditDeadline) {
       await new Promise((resolve) => setTimeout(resolve, 25));
     }
     const provider = controller._activeImageryProvider;
     const before = {
       activeId: controller.getActiveId(),
-      creditVisible: document.body.innerText.includes('Powered by Esri'),
+      creditVisible: document.body.innerText.includes('NASA GIBS'),
       globeShown: styleManager.viewer.scene.globe.show,
       hasLayer: Boolean(controller._imageryLayer),
     };
@@ -310,11 +310,11 @@ try {
     }
     // The controller commits `activeId` before its fallback promise callback
     // emits the terminal error state that re-syncs the chips, and Cesium drops
-    // the Esri credit on a later render frame again. A fixed delay races both:
+    // the Blue Marble credit on a later render frame again. A fixed delay races both:
     // 50ms was enough most runs and not enough on a slow one, which is the same
     // flake as the tray timers above (#54). Poll the observable truth instead.
     const domDeadline = performance.now() + 3000;
-    const settled = () => !document.body.innerText.includes('Powered by Esri')
+    const settled = () => !document.body.innerText.includes('NASA GIBS')
       && JSON.stringify([...document.querySelectorAll('.map-stack-chip[aria-pressed="true"]')]
         .map((chip) => chip.dataset.stackId)) === JSON.stringify(['osm']);
     while (!settled() && performance.now() < domDeadline) {
@@ -323,30 +323,30 @@ try {
     const afterTwo = {
       activeId: controller.getActiveId(),
       lastError: controller.getState().lastError,
-      creditVisible: document.body.innerText.includes('Powered by Esri'),
+      creditVisible: document.body.innerText.includes('NASA GIBS'),
       globeShown: styleManager.viewer.scene.globe.show,
       hasLayer: Boolean(controller._imageryLayer),
       active: [...document.querySelectorAll('.map-stack-chip')]
         .filter((chip) => chip.getAttribute('aria-pressed') === 'true')
         .map((chip) => chip.dataset.stackId),
     };
-    await styleManager._setMapStack('esri-imagery', { syncShare: false });
+    await styleManager._setMapStack('blue-marble', { syncShare: false });
     return { before, afterOne, afterTwo };
   });
   check(
-    'two active Esri tile failures fall back to a rendered, truthful OSM stack',
-    esriTileFailureFallback.before.activeId === 'esri-imagery'
-      && esriTileFailureFallback.before.creditVisible
-      && esriTileFailureFallback.before.globeShown
-      && esriTileFailureFallback.before.hasLayer
-      && esriTileFailureFallback.afterOne === 'esri-imagery'
-      && esriTileFailureFallback.afterTwo.activeId === 'osm'
-      && /tile requests failed; using OSM/i.test(esriTileFailureFallback.afterTwo.lastError)
-      && esriTileFailureFallback.afterTwo.creditVisible === false
-      && esriTileFailureFallback.afterTwo.globeShown
-      && esriTileFailureFallback.afterTwo.hasLayer
-      && JSON.stringify(esriTileFailureFallback.afterTwo.active) === JSON.stringify(['osm']),
-    JSON.stringify(esriTileFailureFallback),
+    'two active Blue Marble tile failures fall back to a rendered, truthful OSM stack',
+    keylessTileFailureFallback.before.activeId === 'blue-marble'
+      && keylessTileFailureFallback.before.creditVisible
+      && keylessTileFailureFallback.before.globeShown
+      && keylessTileFailureFallback.before.hasLayer
+      && keylessTileFailureFallback.afterOne === 'blue-marble'
+      && keylessTileFailureFallback.afterTwo.activeId === 'osm'
+      && /tile requests failed; using OSM/i.test(keylessTileFailureFallback.afterTwo.lastError)
+      && keylessTileFailureFallback.afterTwo.creditVisible === false
+      && keylessTileFailureFallback.afterTwo.globeShown
+      && keylessTileFailureFallback.afterTwo.hasLayer
+      && JSON.stringify(keylessTileFailureFallback.afterTwo.active) === JSON.stringify(['osm']),
+    JSON.stringify(keylessTileFailureFallback),
   );
 
   // The tray's state changes are timer-driven: opening schedules the focus

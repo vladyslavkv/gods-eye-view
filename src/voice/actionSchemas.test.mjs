@@ -38,7 +38,8 @@ test('the complete Realtime tool payload pins the manifest-generated layer relea
     // requested radius and center authority in descriptions only.
     // Street Level adds its toggle enum values and generated alias hint.
     // The removed non-commercial cable layer drops its enum value and aliases.
-    'a5b8801331f39a508fa41103a27a2a0b8063313a6010c886b013cf4614bc49f1',
+    // The keyless NASA Blue Marble landing adds a map-stack value and hint.
+    'b98f6ccee1a9c12b478a8c85bbe32300cebd3c2c223c20cf871f044a26f7eec8',
   );
 });
 
@@ -138,6 +139,9 @@ test('all legacy action arguments are byte-identical after removing the delibera
   // Cyber adds one HUD layout.
   const hud = property('set_hud').layout;
   hud.enum = hud.enum.filter((layout) => layout !== 'cyber');
+  // The keyless NASA Blue Marble landing adds one map stack.
+  const stack = property('set_map_stack').stack;
+  stack.enum = stack.enum.filter((id) => id !== 'blue-marble');
   // Derived by applying the same removals to the 4b56d0e9 actionSchemas.
   assert.equal(
     createHash('sha256').update(JSON.stringify(legacy)).digest('hex'),

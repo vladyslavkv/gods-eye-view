@@ -119,9 +119,16 @@ const CONTROLLER_STACKS = [
     available: true,
     unavailableReason: null,
   },
+  {
+    id: 'blue-marble',
+    label: 'Blue Marble',
+    requiresIon: false,
+    available: true,
+    unavailableReason: null,
+  },
 ];
 
-test('the row renders exactly the five owner-approved sources', () => {
+test('the row renders exactly the six owner-approved sources', () => {
   const container = makeElement();
   renderMapStackChips(container, CONTROLLER_STACKS, {
     activeId: 'photoreal',
@@ -130,7 +137,14 @@ test('the row renders exactly the five owner-approved sources', () => {
 
   assert.deepEqual(
     container.children.map((chip) => chip.dataset.stackId),
-    ['photoreal', 'bing-aerial', 'bing-labels', 'esri-imagery', 'osm'],
+    [
+      'photoreal',
+      'bing-aerial',
+      'bing-labels',
+      'esri-imagery',
+      'osm',
+      'blue-marble',
+    ],
   );
   assert.deepEqual(container.children.map(chipText), [
     'Google 3D',
@@ -138,6 +152,7 @@ test('the row renders exactly the five owner-approved sources', () => {
     'Bing Labels',
     'Esri Satellite',
     'OSM',
+    'Blue Marble',
   ]);
   assert.deepEqual(PRESENTED_MAP_STACK_IDS, [
     'photoreal',
@@ -145,6 +160,7 @@ test('the row renders exactly the five owner-approved sources', () => {
     'bing-labels',
     'esri-imagery',
     'osm',
+    'blue-marble',
   ]);
   assert.ok(
     container.children.every(
@@ -158,6 +174,25 @@ test('the row renders exactly the five owner-approved sources', () => {
   );
 });
 
+test('should hide the Esri tile when Esri is not licensed and keep the other five', () => {
+  const container = makeElement();
+  const unlicensed = CONTROLLER_STACKS.map((stack) =>
+    stack.id === 'esri-imagery'
+      ? {
+          ...stack,
+          available: false,
+          hideWhenUnavailable: true,
+          unavailableReason: 'needs ESRI_IMAGERY_LICENSED=1',
+        }
+      : stack,
+  );
+  renderMapStackChips(container, unlicensed, { activeId: 'blue-marble', doc });
+  assert.deepEqual(
+    container.children.map((chip) => chip.dataset.stackId),
+    ['photoreal', 'bing-aerial', 'bing-labels', 'osm', 'blue-marble'],
+  );
+});
+
 test('internal and future stacks stay outside the approved presentation set', () => {
   const container = makeElement();
   // A future Hybrid stack may land in the controller, but it must not appear
@@ -168,7 +203,7 @@ test('internal and future stacks stay outside the approved presentation set', ()
   ];
   renderMapStackChips(container, withHybrid, { activeId: 'photoreal', doc });
 
-  assert.equal(container.children.length, 5);
+  assert.equal(container.children.length, 6);
   assert.doesNotMatch(container.children.map(chipText).join(' '), /Hybrid/);
 });
 

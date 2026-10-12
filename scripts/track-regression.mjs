@@ -88,7 +88,7 @@
  *   --source-base <path>  Browser module prefix (default /src)
  *   --url <url>        App URL (default http://localhost:4173)
  *   --headful          Show the browser (debugging)
- *   --offline-imagery  Use bundled texture for known Esri/OSM tile images only
+ *   --offline-imagery  Use bundled texture for known Blue Marble/Esri/OSM tile images only
  *   --keep-open        Leave the browser open after the run (debugging)
  */
 
@@ -275,6 +275,8 @@ async function main() {
           && /^\/ArcGIS\/rest\/services\/World_Imagery\/MapServer\/tile\/\d+\/\d+\/\d+$/.test(url.pathname))
         || (url.origin === 'https://tile.openstreetmap.org'
           && /^\/\d+\/\d+\/\d+\.png$/.test(url.pathname))
+        || (url.origin === 'https://gibs.earthdata.nasa.gov'
+          && /^\/wmts\/epsg3857\/best\/BlueMarble_ShadedRelief_Bathymetry\/default\/GoogleMapsCompatible_Level8\/\d+\/\d+\/\d+\.jpeg$/.test(url.pathname))
       );
       if (OFFLINE_IMAGERY && knownImageryTile) {
         offlineImageryRequests++;

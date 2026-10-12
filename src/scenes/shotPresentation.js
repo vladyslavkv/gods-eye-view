@@ -1,3 +1,5 @@
+import { imageryComparisonStackId } from '../maps/imageryComparison.js';
+
 const DEFAULT_SHOT_DURATION_SEC = 4;
 const clamp01 = (value) => Math.max(0, Math.min(1, value));
 const deepClone = (value) => JSON.parse(JSON.stringify(value));
@@ -99,14 +101,20 @@ export function visualStateForShot(shot, packs, isMapStackAvailable) {
     ...sourceRecipe?.runtimeControlsByBeat?.[sceneBeatState?.params?.beatId],
   };
   if (controls.imageryComparison === true) {
-    return { ...(shot.visual || {}), mapStack: 'esri-imagery' };
+    return {
+      ...(shot.visual || {}),
+      mapStack: imageryComparisonStackId(isMapStackAvailable),
+    };
   }
   if (
     sourceRecipe?.standaloneSurfaceBeatIds?.includes(
       sceneBeatState?.params?.beatId,
     )
   ) {
-    return { ...(shot.visual || {}), mapStack: 'esri-imagery' };
+    return {
+      ...(shot.visual || {}),
+      mapStack: imageryComparisonStackId(isMapStackAvailable),
+    };
   }
   const visual = sourceRecipe?.photorealSurfaceBeatIds?.includes(
     sceneBeatState?.params?.beatId,

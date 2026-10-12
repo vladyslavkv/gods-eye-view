@@ -126,3 +126,8 @@ test('annotations travel in the link, keeping only what the app draws', async ()
   // Too long for a link: the view keeps them, the link leaves them out.
   assert.equal(viewToParams(many).has('an'), false);
 });
+
+test('should carry the NASA Blue Marble basemap through a share link when a view names it', () => {
+  const view = createView({ camera: { lat: 1, lon: 2 }, map: 'blue-marble' });
+  assert.equal(viewFromParams(viewToParams(view)).map, 'blue-marble');
+});

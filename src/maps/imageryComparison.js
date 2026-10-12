@@ -1,18 +1,34 @@
+/** The keyless landing basemap: public-domain NASA imagery (DATA_SOURCES.md). */
+export const KEYLESS_DEFAULT_STACK_ID = 'blue-marble';
+
 /** Basemap that before/after imagery comparisons are read against. */
 export const IMAGERY_COMPARISON_STACK_ID = 'esri-imagery';
+
+/**
+ * The comparison surface: Esri when it is offered (licensed), otherwise the
+ * keyless NASA Blue Marble globe. Without an availability check, Esri.
+ * @param {(id: string) => boolean} [isStackAvailable]
+ */
+export function imageryComparisonStackId(isStackAvailable) {
+  return isStackAvailable?.(IMAGERY_COMPARISON_STACK_ID) === false
+    ? KEYLESS_DEFAULT_STACK_ID
+    : IMAGERY_COMPARISON_STACK_ID;
+}
 
 const SWITCH_POLICIES = new Set(['preserve', 'esri', 'esri-if-photoreal']);
 const leases = new WeakMap();
 
-function comparisonTargetId(activeId, switchPolicy) {
+function comparisonTargetId(controller, activeId, switchPolicy) {
   if (!SWITCH_POLICIES.has(switchPolicy))
     throw new Error(
       `Unknown imagery comparison switch policy: ${switchPolicy}`,
     );
-  if (switchPolicy === 'esri' && activeId !== IMAGERY_COMPARISON_STACK_ID)
-    return IMAGERY_COMPARISON_STACK_ID;
+  const surface = imageryComparisonStackId(
+    controller.isStackAvailable?.bind(controller),
+  );
+  if (switchPolicy === 'esri' && activeId !== surface) return surface;
   if (switchPolicy === 'esri-if-photoreal' && activeId === 'photoreal')
-    return IMAGERY_COMPARISON_STACK_ID;
+    return surface;
   return null;
 }
 
@@ -49,7 +65,7 @@ export function acquireImageryComparison(
         : `Imagery comparison is already held by ${held.owner}`,
     );
   const previousId = controller.getActiveId?.() ?? null;
-  const targetId = comparisonTargetId(previousId, switchPolicy);
+  const targetId = comparisonTargetId(controller, previousId, switchPolicy);
   const lease = {
     owner,
     generation: null,

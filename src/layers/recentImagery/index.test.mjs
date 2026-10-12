@@ -509,7 +509,7 @@ test('a lease that cannot reach the Esri map never shows the divider and says wh
   f.layer.setMode('basemap');
   await settleTimes();
   assert.equal(f.snap().comparison.active, false);
-  assert.equal(f.snap().error, 'Esri map unavailable · no swipe');
+  assert.equal(f.snap().error, 'Globe map unavailable · no swipe');
   assert.equal(f.owned().a.splitDirection, 'none');
 });
 
@@ -569,7 +569,7 @@ test('a manual switch to Google 3D while a day is shown takes Esri back once and
   assert.deepEqual(f.drapes(), { a: `${S18}|left`, b: `${L16}|right` });
   assert.equal(
     f.snap().notice,
-    'Imagery stays on Esri · CLEAR to use Google 3D',
+    'Imagery stays on globe · CLEAR to use Google 3D',
   );
   assert.equal(f.snap().error, null);
   // Once per switch generation: a repeated notification is not a new
@@ -633,7 +633,7 @@ test('a re-lease refused by another owner says so, drapes without a swipe and do
   assert.equal(f.snap().error, 'Comparison in use by another scene');
   assert.notEqual(
     f.snap().notice,
-    'Imagery stays on Esri · CLEAR to use Google 3D',
+    'Imagery stays on globe · CLEAR to use Google 3D',
   );
   assert.equal(f.snap().comparison.active, false);
   assert.equal(f.owned().a.kind, 'tileset');
@@ -680,7 +680,10 @@ function failingMapController() {
       return () => listeners.delete(fn);
     },
   };
-  const registry = createDefaultMapSources({ googleTileset: { show: true } });
+  const registry = createDefaultMapSources({
+    googleTileset: { show: true },
+    esriImageryLicensed: true,
+  });
   for (const source of registry.sources) {
     if (!source.imagery) continue;
     const id = source.descriptor.id;
@@ -779,10 +782,10 @@ for (const path of ['subscription', 'stats poll']) {
     assert.equal(f.snap().comparison.active, false);
     assert.deepEqual(f.drapes(), { a: `${S18}|none`, b: `${L16}|none` });
     assert.equal(f.owned().a.kind, 'tileset');
-    assert.equal(f.snap().error, 'Esri map unavailable · no swipe');
+    assert.equal(f.snap().error, 'Globe map unavailable · no swipe');
     assert.notEqual(
       f.snap().notice,
-      'Imagery stays on Esri · CLEAR to use Google 3D',
+      'Imagery stays on globe · CLEAR to use Google 3D',
     );
     // More polls, renders and dead Esri listeners never retry.
     failEsriTiles();
@@ -808,7 +811,7 @@ for (const path of ['subscription', 'stats poll']) {
     assert.deepEqual(f.drapes(), { a: `${S18}|left`, b: `${L16}|right` });
     assert.equal(
       f.snap().notice,
-      'Imagery stays on Esri · CLEAR to use Google 3D',
+      'Imagery stays on globe · CLEAR to use Google 3D',
     );
     assert.equal(f.snap().error, null);
     controller.destroy();
