@@ -35,7 +35,11 @@ async function fetchRegional(url, read, options = {}) {
       headers,
       redirect,
     });
-    if (!response.ok) throw new Error(`Upstream returned ${response.status}`);
+    // 304 only answers a conditional request the caller made itself; its
+    // reader decides what an empty Not Modified body means.
+    if (!response.ok && response.status !== 304) {
+      throw new Error(`Upstream returned ${response.status}`);
+    }
     return await read(response, maxBytes, controller.signal);
   } finally {
     clearTimeout(timeout);
@@ -46,4 +50,4 @@ function fetchRegionalJson(url, options = {}) {
   return fetchRegional(url, readResponseJsonCapped, options);
 }
 
-export { fetchRegionalJson };
+export { fetchRegional, fetchRegionalJson };

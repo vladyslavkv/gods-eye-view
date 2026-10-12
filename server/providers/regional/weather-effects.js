@@ -30,7 +30,7 @@ function trimWeatherEffectsCache() {
 function weatherEffectsProxy() {
   async function refresh(point, key) {
     const weather = await fetchRegionalWeather(point);
-    if (!weather) throw new Error('Weather observation unavailable');
+    if (!weather) throw new Error('Weather forecast unavailable');
     const payload = {
       status: 'ready',
       retrievedAt: new Date().toISOString(),
