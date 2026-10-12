@@ -732,6 +732,7 @@
   "scenes": {
     "exports": ["./scenes"],
     "modules": [
+      "src/maps/imageryComparison.js",
       "src/maps/catalog.js",
       "src/scenes/director.js",
       "src/scenes/playbackAdapter.js",
