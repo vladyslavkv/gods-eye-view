@@ -167,6 +167,73 @@ for (const preview of [false, true]) {
   });
 }
 
+// The OSRM tests below exercise the proxy against the FOSSGIS servers, which a
+// deployment reaches only by opting in through OSRM_BASE_URL.
+const FOSSGIS_OSRM = 'https://routing.openstreetmap.de/routed-{profile}';
+process.env.OSRM_BASE_URL = FOSSGIS_OSRM;
+
+test('should report routing unavailable without contacting a router when OSRM_BASE_URL is unset', async (t) => {
+  delete process.env.OSRM_BASE_URL;
+  t.after(() => {
+    process.env.OSRM_BASE_URL = FOSSGIS_OSRM;
+  });
+  _resetRouteUpstreamForTest();
+  const request = install(installRouteMiddleware);
+  t.mock.method(globalThis, 'fetch', async () => assert.fail('no request'));
+  const result = await request(
+    '/api/route',
+    '?profile=foot&coords=-97,30;-97.01,30.01',
+    'GET',
+    'unset-router',
+  );
+  assert.equal(result.statusCode, 200);
+  assert.deepEqual(result.body, {
+    ok: false,
+    unavailable: true,
+    error:
+      'routing unavailable — no router configured (OSRM_BASE_URL); the public FOSSGIS servers are not licensed for commercial use in this build',
+  });
+});
+
+test('should route through OSRM_BASE_URL with the profile filled in when it is set', async (t) => {
+  process.env.OSRM_BASE_URL = 'https://osrm.example.com/{profile}/';
+  t.after(() => {
+    process.env.OSRM_BASE_URL = FOSSGIS_OSRM;
+  });
+  _resetRouteUpstreamForTest();
+  const request = install(installRouteMiddleware);
+  const urls = [];
+  t.mock.method(globalThis, 'fetch', async (url) => {
+    urls.push(url);
+    return Response.json({
+      code: 'Ok',
+      routes: [
+        {
+          distance: 10,
+          duration: 5,
+          geometry: {
+            coordinates: [
+              [-97, 30],
+              [-97.01, 30.01],
+            ],
+          },
+        },
+      ],
+    });
+  });
+  const result = await request(
+    '/api/route',
+    '?profile=bike&coords=-97,30;-97.02,30.02',
+    'GET',
+    'configured-router',
+  );
+  assert.equal(result.body.ok, true);
+  assert.match(
+    urls[0],
+    /^https:\/\/osrm\.example\.com\/bike\/route\/v1\/bike\//,
+  );
+});
+
 test('OSRM routing preserves aliases, cache, span guards and upstream failure behavior', async (t) => {
   const request = install(installRouteMiddleware);
   let calls = 0;

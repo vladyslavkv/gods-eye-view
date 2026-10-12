@@ -214,7 +214,7 @@ While recording, call out anything in these areas — this is the feedback I mos
 
 ## 6. Live video CCTV (HTTPS HLS) — soak, no mic
 
-> Requires the DelDOT pack (loads by default; `CCTV_DELDOT_ENABLED=0` disables it).
+> Requires the DelDOT pack, which is opt-in: start the server with `CCTV_DELDOT_ENABLED=1`.
 
 1. Turn on **CCTV**, fly to Dover, DE, and activate **DE 1 @ Main Toll Plaza**. ✅ Within ~30 s the monitor plane and the panel preview both show moving video,.
 2. Leave it for **five minutes**. ✅ Continuous playback; at most a short hitch about once a minute (the agency restarts its stream on a timer). ❌ A freeze that does not recover, or the panel picture stopping while the plane keeps moving.

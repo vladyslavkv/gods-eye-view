@@ -445,7 +445,7 @@ test('selecting an aircraft draws a magenta trail of the fixes the receiver hear
   assert.equal(trails[0].destroyed, true, 'the trail leaves with the aircraft');
 });
 
-test('adsbdb type, operator and route reach the card for the selected aircraft only', async (t) => {
+test('should put the adsbdb type on the selected aircraft card and never look up a route', async (t) => {
   const receiver = fakeReceiver({ mode: 'adsb', connected: true });
   const clock = { now: 100_000 };
   const queries = [];
@@ -454,14 +454,7 @@ test('adsbdb type, operator and route reach the card for the selected aircraft o
       enrichment: {
         async getEnrichment(query) {
           queries.push(`${query.kind}:${query.id}`);
-          if (query.kind === 'type')
-            return { found: true, typeCode: 'B407', typeName: 'Bell 407' };
-          return {
-            found: true,
-            airline: 'Air Evac',
-            origin: { code: 'AUS', lat: 0.1, lon: 0 },
-            destination: { code: 'SAT', lat: -0.1, lon: 0 },
-          };
+          return { found: true, typeCode: 'B407', typeName: 'Bell 407' };
         },
       },
     },
@@ -477,13 +470,12 @@ test('adsbdb type, operator and route reach the card for the selected aircraft o
   assert.deepEqual(queries, [], 'no request per contact');
   assert.equal(layer.selectAircraft('a0b702'), true);
   await new Promise((resolve) => setTimeout(resolve, 400));
-  assert.deepEqual([...queries].sort(), ['route:EVC145', 'type:a0b702']);
+  assert.deepEqual(queries, ['type:a0b702']);
   const entity = sources[0].entities.getById('local-adsb:a0b702');
-  assert.deepEqual(entity.gevLabelModel.details.slice(0, 4), [
+  assert.deepEqual(entity.gevLabelModel.details.slice(0, 3), [
     'ICAO A0B702 · EVC145',
     'Helicopter · A7',
-    'Air Evac · Bell 407',
-    'AUS → SAT',
+    'Bell 407',
   ]);
   assert.equal(
     entity.gevLabelModel.details.at(-1),
@@ -491,7 +483,7 @@ test('adsbdb type, operator and route reach the card for the selected aircraft o
   );
   layer.selectAircraft('a0b702');
   await layer.update();
-  assert.equal(queries.length, 2, 'each key is asked for once');
+  assert.equal(queries.length, 1, 'each key is asked for once');
 });
 
 test('the DISPLAY 3D toggle gives local aircraft magenta class models', async (t) => {

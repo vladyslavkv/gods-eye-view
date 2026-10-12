@@ -121,7 +121,7 @@ test('route hints refine a feed default and never escape the known modes', () =>
   assert.equal(transitModeFor(hsl, '31M1'), 'subway');
   assert.equal(transitModeFor(hsl, '1006'), 'tram');
   assert.equal(transitModeFor(hsl, '9982'), 'bus');
-  const msp = getTransitFeed('metrotransit-msp');
+  const msp = getRegisteredTransitFeed('metrotransit-msp');
   assert.equal(transitModeFor(msp, '901'), 'tram');
   assert.equal(transitModeFor(msp, '17'), 'bus');
   const entur = getTransitFeed('entur-norway');
@@ -237,5 +237,43 @@ test('published transit history scope agrees with the catalog capability', () =>
   assert.doesNotMatch(
     transit,
     /four fixes|0\.95x|guaranteed lower|one poll interval behind/,
+  );
+});
+
+test('should not offer Metro Transit when TRANSIT_METROTRANSIT_ENABLED is unset', () => {
+  assert.equal(getTransitFeed('metrotransit-msp', {}), null);
+  assert.equal(
+    publicTransitCatalog({}).some((feed) => feed.id === 'metrotransit-msp'),
+    false,
+  );
+  assert.equal(
+    transitFeedsInRange(44.9778, -93.265).some(
+      (feed) => feed.id === 'metrotransit-msp',
+    ),
+    false,
+  );
+  assert.ok(getRegisteredTransitFeed('metrotransit-msp'), 'still documented');
+});
+
+test('should offer Metro Transit when TRANSIT_METROTRANSIT_ENABLED=1', () => {
+  const env = { TRANSIT_METROTRANSIT_ENABLED: '1' };
+  assert.equal(getTransitFeed('metrotransit-msp', env)?.id, 'metrotransit-msp');
+  assert.ok(
+    publicTransitCatalog(env).some((feed) => feed.id === 'metrotransit-msp'),
+  );
+  assert.equal(
+    getTransitFeed('metrotransit-msp', { TRANSIT_METROTRANSIT_ENABLED: 'yes' }),
+    null,
+    'only 1 opts in',
+  );
+});
+
+test('should poll a served feed in range when the server catalog includes it', () => {
+  const served = TRANSIT_FEED_REGISTRY.filter(
+    (feed) => feed.id === 'metrotransit-msp',
+  );
+  assert.deepEqual(
+    transitFeedsInRange(44.9778, -93.265, 0, served).map((feed) => feed.id),
+    ['metrotransit-msp'],
   );
 });

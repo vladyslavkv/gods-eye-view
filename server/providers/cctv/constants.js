@@ -194,13 +194,6 @@ export const TARKTEE_ANCHORS = [
   { lat: 58.3859, lon: 24.4971 }, // Pärnu
   { lat: 59.3797, lon: 28.1791 }, // Narva
 ];
-/** Warendorf (Germany): the Marktplatz municipal webcam from a curated catalog file. */
-export const DEFAULT_WARENDORF_SOURCE_FILE =
-  'config/cctv_sources.warendorf.json';
-export const WARENDORF_IMAGE_ORIGINS = Object.freeze([
-  'http://webcam.warendorf.de/',
-  'https://www.kreis-warendorf.de/',
-]);
 /** Live Traffic NSW (Transport for NSW): keyless public camera catalog. */
 export const NSW_CAMERAS_URL =
   'https://data.livetraffic.com/cameras/traffic-cam.json';

@@ -20,8 +20,15 @@ import {
  * Only missing/stale points go upstream; the response is rebuilt in exact
  * request order. Larger requests are chunked sequentially, and one failing
  * chunk does not discard the chunks that resolved.
+ *
+ * Opt-in: the hosted Re:Earth service publishes no service terms (only the CC
+ * BY data licence), so lookups run only with REEARTH_TERRAIN_ENABLED=1
+ * (docs/COMMERCIAL_CONFIG.md). Otherwise the route answers 503 `disabled` and
+ * the client resolves heights from its bundled EGM96 geoid.
  */
 export function terrainHeightsProxy() {
+  const enabled = () =>
+    String(process.env.REEARTH_TERRAIN_ENABLED || '').trim() === '1';
   const TTL_MS = 30 * 24 * 3600_000;
   const CACHE_DIR = path.join(process.cwd(), '.gev-cache');
   const CACHE_PATH = path.join(CACHE_DIR, 'terrain-heights.json');
@@ -177,6 +184,14 @@ export function terrainHeightsProxy() {
         if (points.length > MAX_POINTS) {
           send(500, {
             error: `too many points (${points.length}); max ${MAX_POINTS} per request`,
+          });
+          return;
+        }
+        if (!enabled()) {
+          send(503, {
+            error:
+              'Re:Earth terrain disabled — not licensed for commercial use in this build',
+            disabled: true,
           });
           return;
         }

@@ -6,7 +6,12 @@ import {
   RANGE_SLACK_KM,
   inflateViewBounds,
 } from './policy.js';
-import { transitFeedsInRange } from '../../data/transitFeeds.js';
+import {
+  TRANSIT_ENABLED_FEEDS,
+  TRANSIT_FEED_REGISTRY,
+  getRegisteredTransitFeed,
+  transitFeedsInRange,
+} from '../../data/transitFeeds.js';
 
 /**
  * Camera-driven feed activation: only the feeds whose coverage circle contains
@@ -14,7 +19,7 @@ import { transitFeedsInRange } from '../../data/transitFeeds.js';
  * @param {object} context
  * @returns {object}
  */
-export function createViewport({ state, services, parts }) {
+export function createViewport({ state, services, parts, source }) {
   const { governorRequestRender } = services.render;
 
   function getCameraAltitude(viewer = state._viewer) {
@@ -74,15 +79,42 @@ export function createViewport({ state, services, parts }) {
     parts.rendering.requestVisibility();
   }
 
+  /**
+   * Adopt the server's catalog, which carries the feeds its operator opted in
+   * to; until it answers (or if it cannot), only the bundled defaults poll.
+   */
+  async function loadServedFeeds() {
+    if (state._servedFeeds || typeof source?.getFeeds !== 'function') return;
+    try {
+      const served = await source.getFeeds();
+      state._servedFeeds = served
+        .map((feed) => getRegisteredTransitFeed(feed?.id))
+        .filter(Boolean);
+      runProximityCheck();
+    } catch (error) {
+      console.warn(
+        '[Data:Transit] feed catalog unavailable; polling bundled defaults:',
+        error?.message || error,
+      );
+    }
+  }
+
   function runProximityCheck() {
     if (!state._enabled || !state._viewer) return;
     refreshViewBounds();
     const altitude = getCameraAltitude();
     state._altitudeGateOpen = altitudeGateOpen(altitude);
     const center = state._altitudeGateOpen ? getCameraCenterLatLon() : null;
+    const feeds = state._servedFeeds || TRANSIT_ENABLED_FEEDS;
     const desired = new Map();
+    state._unlicensedInRange = [];
     if (center) {
-      for (const feed of transitFeedsInRange(center.lat, center.lon)) {
+      for (const feed of transitFeedsInRange(
+        center.lat,
+        center.lon,
+        0,
+        feeds,
+      )) {
         desired.set(feed.id, feed);
       }
       // Hysteresis: a feed already active stays active a little past its edge.
@@ -90,9 +122,19 @@ export function createViewport({ state, services, parts }) {
         center.lat,
         center.lon,
         RANGE_SLACK_KM,
+        feeds,
       )) {
         if (state._activeFeeds.has(feed.id)) desired.set(feed.id, feed);
       }
+      // Registered feeds here that this build does not poll, named honestly.
+      state._unlicensedInRange = transitFeedsInRange(
+        center.lat,
+        center.lon,
+        0,
+        TRANSIT_FEED_REGISTRY,
+      )
+        .filter((feed) => !feeds.includes(feed))
+        .map((feed) => feed.name);
     }
     for (const feedId of [...state._activeFeeds.keys()]) {
       if (!desired.has(feedId)) {
@@ -131,6 +173,7 @@ export function createViewport({ state, services, parts }) {
     getCameraAltitude,
     getCameraCenterLatLon,
     altitudeGateOpen,
+    loadServedFeeds,
     runProximityCheck,
     onCameraChanged,
   };

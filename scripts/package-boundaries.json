@@ -149,6 +149,8 @@
     "modules": [
       "server/providers/gbfs.js",
       "server/providers/common/http.js",
+      "server/providers/optInSources.js",
+      "src/data/commercialUse.js",
       "src/data/gbfsSource.js",
       "src/sources/httpBody.js"
     ],
@@ -342,6 +344,7 @@
       "src/search/geospatial.js",
       "src/search/http.js",
       "src/search/defaults.js",
+      "src/sources/optInSources.js",
       "src/search/alpsGeocoder.js",
       "src/search/coordinateGeocoder.js",
       "src/search/coordinateParser.js",
@@ -1125,6 +1128,9 @@
     "exports": ["./layers/bikeshare"],
     "modules": [
       "src/layers/bikeshare/controls.js",
+      "src/data/commercialUse.js",
+      "src/sources/optInSources.js",
+      "src/data/gbfsSource.js",
       "src/layers/bikeshare/index.js",
       "src/layers/bikeshare/ingestion.js",
       "src/layers/bikeshare/lifecycle.js",
@@ -1339,6 +1345,7 @@
       "src/maps/imagery.js",
       "src/maps/registry.js",
       "src/maps/terrain.js",
+      "src/sources/optInSources.js",
       "src/maps/terrainRetry.js",
       "src/keySetupCore.mjs",
       "src/localRequestGate.mjs",
@@ -1623,6 +1630,7 @@
       "src/layers/awareness/subject.js",
       "src/layers/awareness/testing.js",
       "src/layers/bikeshare/controls.js",
+      "src/data/gbfsSource.js",
       "src/layers/bikeshare/index.js",
       "src/layers/bikeshare/ingestion.js",
       "src/layers/bikeshare/lifecycle.js",
@@ -1849,6 +1857,7 @@
       "src/scopeMask.js",
       "src/search/alpsGeocoder.js",
       "src/search/defaults.js",
+      "src/sources/optInSources.js",
       "src/search/geospatial.js",
       "src/search/google.js",
       "src/search/http.js",
@@ -2029,6 +2038,7 @@
       "src/layers/transit/lifecycle.js",
       "src/layers/transit/policy.js",
       "src/layers/transit/queries.js",
+      "src/data/commercialUse.js",
       "src/layers/transit/rendering.js",
       "src/layers/transit/selection.js",
       "src/layers/transit/state.js",
@@ -2345,6 +2355,7 @@
       "src/layers/awareness/subject.js",
       "src/layers/awareness/testing.js",
       "src/layers/bikeshare/controls.js",
+      "src/data/gbfsSource.js",
       "src/layers/bikeshare/index.js",
       "src/layers/bikeshare/ingestion.js",
       "src/layers/bikeshare/lifecycle.js",
@@ -2544,6 +2555,7 @@
       "src/renderGovernor.js",
       "src/search/alpsGeocoder.js",
       "src/search/defaults.js",
+      "src/sources/optInSources.js",
       "src/search/geospatial.js",
       "src/search/google.js",
       "src/search/http.js",
@@ -2605,6 +2617,7 @@
       "src/layers/transit/lifecycle.js",
       "src/layers/transit/policy.js",
       "src/layers/transit/queries.js",
+      "src/data/commercialUse.js",
       "src/layers/transit/rendering.js",
       "src/layers/transit/selection.js",
       "src/layers/transit/state.js",
@@ -2753,6 +2766,7 @@
       "src/cameraGroundGuard.js",
       "src/search/alpsGeocoder.js",
       "src/search/defaults.js",
+      "src/sources/optInSources.js",
       "src/search/geospatial.js",
       "src/search/google.js",
       "src/search/http.js",
@@ -3004,7 +3018,10 @@
   },
   "bikeshare-source": {
     "exports": ["./layers/bikeshare/source"],
-    "modules": ["src/layers/bikeshare/source.js"],
+    "modules": [
+      "src/layers/bikeshare/source.js",
+      "src/sources/optInSources.js"
+    ],
     "external": []
   },
   "cctv-source": {
@@ -3191,6 +3208,7 @@
       "src/layers/transit/policy.js",
       "src/layers/transit/qaMetrics.js",
       "src/layers/transit/queries.js",
+      "src/data/commercialUse.js",
       "src/layers/transit/rendering.js",
       "src/layers/transit/selection.js",
       "src/layers/transit/state.js",
@@ -3232,6 +3250,7 @@
       "src/layers/transit/lifecycle.js",
       "src/layers/transit/policy.js",
       "src/layers/transit/queries.js",
+      "src/data/commercialUse.js",
       "src/layers/transit/rendering.js",
       "src/layers/transit/selection.js",
       "src/layers/transit/state.js",
@@ -3311,6 +3330,7 @@
   "tools": {
     "exports": ["./tools"],
     "modules": [
+      "src/data/commercialUse.js",
       "src/tools/index.js",
       "src/tools/catalog.js",
       "src/tools/schema.js",
@@ -3382,6 +3402,8 @@
   "tools-services": {
     "exports": ["./tools/services"],
     "modules": [
+      "src/data/gbfsSource.js",
+      "src/sources/optInSources.js",
       "src/tools/services.js",
       "src/layers/bikeshare/registry.js",
       "src/layers/bikeshare/source.js",

@@ -5114,7 +5114,7 @@ the standalone layer defaults to the hourly tile source.
 
 OSM-derived layers share one OpenStreetMap data attribution entry. Displayed
 OSM data retains a short inline OpenStreetMap credit, plus OpenMapTiles while
-OpenFreeMap tiles are used; its display follows the existing map-credit rules. Routing, Warendorf cameras,
+OpenFreeMap tiles are used; its display follows the existing map-credit rules. Routing,
 datacenters, dams and the Nepal locator retain that shared credit while displayed.
 
 Military fragments stitch by source identity. Different mapped parcels merge only

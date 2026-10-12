@@ -18,8 +18,10 @@
  * `defaultEnabled` is separate from being registered. A feed ships switched ON
  * only when its operator's own published terms were READ and plainly cover this
  * use. A registered feed with `defaultEnabled: false` is never polled and never
- * offered to the browser; it is here so the decision is visible and reversible
- * in one line. `terms` records the passage that decision rests on, so the next
+ * offered to the browser — unless it names an `optInEnv` and the SERVER's
+ * environment sets that variable to `1`, the operator's own decision that the
+ * terms cover their deployment. It is here so the decision is visible and
+ * reversible in one line. `terms` records the passage that decision rests on, so the next
  * reader does not have to take the licence string on faith.
  *
  * Pure data + pure helpers: imported by the browser layer, the Vite proxy, and
@@ -177,10 +179,13 @@ export const TRANSIT_FEED_REGISTRY = Object.freeze([
     center: Object.freeze({ lat: 44.9778, lon: -93.265 }),
     loadRadiusKm: 70,
     url: 'https://svc.metrotransit.org/mtgtfs/vehiclepositions.pb',
-    license: 'Public Metro Transit vehicle position data',
+    license: 'No licence published for the realtime feed',
     licenseUrl: 'https://svc.metrotransit.org/',
     attribution: 'Metro Transit — Metropolitan Council',
-    defaultEnabled: true,
+    // No licence covers commercial use of the realtime feed (see `terms`), so
+    // it is polled only when the operator opts in (docs/COMMERCIAL_CONFIG.md).
+    defaultEnabled: false,
+    optInEnv: 'TRANSIT_METROTRANSIT_ENABLED',
     terms: Object.freeze({
       quote:
         "Metro Transit's GTFS-realtime feeds are refreshed every 5 seconds.",
@@ -281,9 +286,21 @@ export const TRANSIT_ENABLED_FEEDS = Object.freeze(
   TRANSIT_FEED_REGISTRY.filter((feed) => feed.defaultEnabled === true),
 );
 
-const FEED_BY_ID = new Map(
-  TRANSIT_ENABLED_FEEDS.map((feed) => [feed.id, feed]),
-);
+/**
+ * Whether a registered feed is pollable: on by default, or opted in by the
+ * server environment. A browser has no `process`, so there only defaults count;
+ * opted-in feeds reach it through the served catalog.
+ * @param {object} feed
+ * @param {Record<string, string|undefined>} [env]
+ * @returns {boolean}
+ */
+function transitFeedEnabled(feed, env = globalThis.process?.env) {
+  if (feed.defaultEnabled === true) return true;
+  return (
+    Boolean(feed.optInEnv) && String(env?.[feed.optInEnv] ?? '').trim() === '1'
+  );
+}
+
 const ANY_FEED_BY_ID = new Map(
   TRANSIT_FEED_REGISTRY.map((feed) => [feed.id, feed]),
 );
@@ -297,11 +314,13 @@ export const TRANSIT_FEED_ID_PATTERN = /^[a-z0-9][a-z0-9-]{1,63}$/;
  * request path to an upstream URL, so a feed the owner has not cleared must not
  * be reachable through it.
  * @param {string} id
+ * @param {Record<string, string|undefined>} [env] Server environment for opt-ins.
  * @returns {object|null}
  */
-export function getTransitFeed(id) {
+export function getTransitFeed(id, env) {
   if (typeof id !== 'string' || !TRANSIT_FEED_ID_PATTERN.test(id)) return null;
-  return FEED_BY_ID.get(id) || null;
+  const feed = ANY_FEED_BY_ID.get(id);
+  return feed && transitFeedEnabled(feed, env) ? feed : null;
 }
 
 /**
@@ -339,14 +358,21 @@ export function haversineKm(aLat, aLon, bLat, bLon) {
  * @param {number} lon
  * @param {number} [slackKm=0] Extra radius (hysteresis) so a feed at the edge
  *   of coverage does not flap on small camera moves.
+ * @param {object[]} [feeds] Candidate feeds (the served catalog's registry entries).
  * @returns {object[]}
  */
-export function transitFeedsInRange(lat, lon, slackKm = 0) {
+export function transitFeedsInRange(
+  lat,
+  lon,
+  slackKm = 0,
+  feeds = TRANSIT_ENABLED_FEEDS,
+) {
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) return [];
-  return TRANSIT_ENABLED_FEEDS.map((feed) => ({
-    feed,
-    km: haversineKm(lat, lon, feed.center.lat, feed.center.lon),
-  }))
+  return feeds
+    .map((feed) => ({
+      feed,
+      km: haversineKm(lat, lon, feed.center.lat, feed.center.lon),
+    }))
     .filter(({ feed, km }) => km <= feed.loadRadiusKm + Math.max(0, slackKm))
     .sort((a, b) => a.km - b.km)
     .map(({ feed }) => feed);
@@ -386,10 +412,13 @@ export function transitModeResolved(feed, routeId) {
 /**
  * Public catalog shape served by `/api/transit/feeds` — everything the browser
  * needs to gate polling and credit the source, and nothing it could misuse.
+ * @param {Record<string, string|undefined>} [env] Server environment for opt-ins.
  * @returns {object[]}
  */
-export function publicTransitCatalog() {
-  return TRANSIT_ENABLED_FEEDS.map((feed) => ({
+export function publicTransitCatalog(env) {
+  return TRANSIT_FEED_REGISTRY.filter((feed) =>
+    transitFeedEnabled(feed, env),
+  ).map((feed) => ({
     id: feed.id,
     name: feed.name,
     operator: feed.operator,

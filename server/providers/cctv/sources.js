@@ -43,8 +43,6 @@ import {
   TARKTEE_IMAGE_ORIGIN,
   DEFAULT_TARKTEE_MAX_SOURCES,
   TARKTEE_ANCHORS,
-  DEFAULT_WARENDORF_SOURCE_FILE,
-  WARENDORF_IMAGE_ORIGINS,
   NSW_CAMERAS_URL,
   NSW_IMAGE_ORIGIN,
   DEFAULT_NSW_MAX_SOURCES,
@@ -1237,65 +1235,6 @@ export async function loadTarkteeSourcesFromDatex() {
     );
     return [];
   }
-}
-
-/**
- * Load the Warendorf municipal webcams (Stadt Warendorf Marktplatz, Kreis
- * Warendorf registration offices) from the curated catalog file. Poses are
- * curated; only the two official municipal image hosts are registered.
- *
- * @returns {Array<object>} Normalized camera source objects.
- */
-export function loadWarendorfSourcesFromCatalog({
-  sourceRoot = process.cwd(),
-} = {}) {
-  const sourceFile =
-    process.env.CCTV_WARENDORF_SOURCES_FILE || DEFAULT_WARENDORF_SOURCE_FILE;
-  const resolved = path.isAbsolute(sourceFile)
-    ? sourceFile
-    : path.resolve(sourceRoot, sourceFile);
-  let rows = [];
-  try {
-    if (!fs.existsSync(resolved)) {
-      console.warn('[CCTV] Warendorf source file missing:', resolved);
-      return [];
-    }
-    const parsed = JSON.parse(fs.readFileSync(resolved, 'utf8'));
-    rows = Array.isArray(parsed) ? parsed : [];
-  } catch (error) {
-    console.warn(
-      '[CCTV] Warendorf source file read error:',
-      error?.message || error,
-    );
-    return [];
-  }
-  const cameras = [];
-  for (const item of rows) {
-    if (!item || typeof item !== 'object') continue;
-    const id = typeof item.id === 'string' ? item.id.trim() : '';
-    const url =
-      typeof item.url === 'string'
-        ? item.url.trim()
-        : typeof item.snapshotUrl === 'string'
-          ? item.snapshotUrl.trim()
-          : '';
-    if (!id || !WARENDORF_IMAGE_ORIGINS.some((o) => url.startsWith(o)))
-      continue;
-    const lat = typeof item.lat === 'number' ? item.lat : NaN;
-    const lon = typeof item.lon === 'number' ? item.lon : NaN;
-    if (!isPlausibleLatLon(lat, lon)) continue;
-    cameras.push({
-      ...item,
-      id,
-      url,
-      snapshotUrl: url,
-      cityId: String(item.cityId || 'warendorf'),
-      feedType: 'image',
-      sourceKind: 'municipal-webcam',
-    });
-  }
-  console.log('[CCTV] Loaded Warendorf camera sources:', cameras.length);
-  return cameras;
 }
 
 /**

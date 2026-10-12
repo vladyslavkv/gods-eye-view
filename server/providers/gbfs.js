@@ -2,8 +2,11 @@ import { readResponseTextCapped } from './common/http.js';
 import {
   isAllowedGbfsHost,
   isAllowedGbfsPath,
+  isCommerciallyLicensedGbfsHost,
   gbfsCacheControl,
 } from '../../src/data/gbfsSource.js';
+import { optedIn } from './optInSources.js';
+import { disabledNotLicensed } from '../../src/data/commercialUse.js';
 
 // ---------------------------------------------------------------------------
 // GBFS (General Bikeshare Feed Specification) proxy constants
@@ -178,6 +181,23 @@ export function gbfsProxy() {
             'Cache-Control': 'no-store',
           });
           res.end(JSON.stringify({ error: 'GBFS host not allowed' }));
+          return;
+        }
+
+        if (
+          !isCommerciallyLicensedGbfsHost(upstreamUrl.hostname) &&
+          !optedIn('GBFS_UNLICENSED_FEEDS_ENABLED')
+        ) {
+          res.writeHead(403, {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-store',
+          });
+          res.end(
+            JSON.stringify({
+              error: disabledNotLicensed('GBFS feed'),
+              disabled: true,
+            }),
+          );
           return;
         }
 

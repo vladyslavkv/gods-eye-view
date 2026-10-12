@@ -139,8 +139,19 @@ test('CelesTrak retains fresh and stale TLE caches', async () => {
   assert.equal(stale.headers['x-tle-cache'], 'STALE-ERROR');
 });
 
+const terrainOptIn = { process: { cwd: () => '/fixture', env: { REEARTH_TERRAIN_ENABLED: '1' } } };
+
+test('should answer terrain unavailable without a lookup when REEARTH_TERRAIN_ENABLED is unset', async () => {
+  let resolved = 0;
+  const app = fixture('terrainHeightsProxy', { resolveTerrainHeightRequest: async () => { resolved++; return { status: 200, body: {} }; } });
+  const res = await app.request('/?points=1,2');
+  assert.equal(res.status, 503);
+  assert.deepEqual(JSON.parse(res.body), { error: 'Re:Earth terrain disabled — not licensed for commercial use in this build', disabled: true });
+  assert.equal(resolved, 0);
+});
+
 test('terrain unexpected failures hide details', async () => {
-  const res = await fixture('terrainHeightsProxy').request('/?points=1,2');
+  const res = await fixture('terrainHeightsProxy', terrainOptIn).request('/?points=1,2');
   assert.equal(res.status, 500);
   assert.deepEqual(JSON.parse(res.body), { error: 'terrain heights proxy error' });
 });
@@ -149,7 +160,7 @@ test('terrain validation and resolver outcomes remain intact', async () => {
   const invalid = await fixture('terrainHeightsProxy', { parseTerrainPoints: () => null }).request();
   assert.equal(invalid.status, 400);
   const body = { results: [{ height: 12 }] };
-  const app = fixture('terrainHeightsProxy', { resolveTerrainHeightRequest: async () => ({ status: 200, body, upstreamError: new Error(detail) }) });
+  const app = fixture('terrainHeightsProxy', { ...terrainOptIn, resolveTerrainHeightRequest: async () => ({ status: 200, body, upstreamError: new Error(detail) }) });
   const res = await app.request('/?points=1,2');
   assert.equal(res.status, 200);
   assert.deepEqual(JSON.parse(res.body), body);
@@ -163,12 +174,40 @@ test('ADSBDB unexpected failures hide details', async () => {
   assert.deepEqual(JSON.parse(res.body), { error: 'adsbdb proxy error' });
 });
 
+const adsbdbOptIn = { process: { cwd: () => '/fixture', env: { ADSBDB_ENABLED: '1' } } };
+
 test('ADSBDB retains validation and missing-aircraft semantics', async () => {
-  const app = fixture('adsbdbProxy');
-  assert.equal((await app.request('/route/!')).status, 400);
+  const app = fixture('adsbdbProxy', adsbdbOptIn);
   assert.equal((await app.request('/type/nope')).status, 400);
   assert.equal((await app.request('/unknown')).status, 404);
   const absent = await app.request('/type/abcdef');
   assert.equal(absent.status, 200);
   assert.deepEqual(JSON.parse(absent.body), { found: false });
+});
+
+test('should not serve adsbdb callsign routes when asked for one', async () => {
+  const calls = [];
+  const app = fixture('adsbdbProxy', { ...adsbdbOptIn, fetch: async (url) => { calls.push(url); return Response.json({}); } });
+  assert.equal((await app.request('/route/UAL123')).status, 404);
+  assert.deepEqual(calls, []);
+});
+
+test('should answer disabled without contacting adsbdb when ADSBDB_ENABLED is unset', async () => {
+  const calls = [];
+  const app = fixture('adsbdbProxy', { fetch: async (url) => { calls.push(url); return Response.json({}); } });
+  const res = await app.request('/type/abcdef');
+  assert.equal(res.status, 200);
+  assert.deepEqual(JSON.parse(res.body), { found: false, disabled: true, reason: 'not licensed for commercial use in this build' });
+  assert.deepEqual(calls, []);
+});
+
+test('should look an aircraft type up when ADSBDB_ENABLED=1', async () => {
+  const calls = [];
+  const app = fixture('adsbdbProxy', { ...adsbdbOptIn, fetch: async (url) => {
+    calls.push(url);
+    return Response.json({ response: { aircraft: { icao_type: 'B738', manufacturer: 'Boeing', type: '737-800', registration: 'N1' } } });
+  } });
+  const res = await app.request('/type/abcdef');
+  assert.deepEqual(JSON.parse(res.body), { found: true, typeCode: 'B738', typeName: 'Boeing 737-800', registration: 'N1' });
+  assert.deepEqual(calls, ['https://api.adsbdb.com/v0/aircraft/abcdef']);
 });

@@ -143,6 +143,33 @@ test('bike share reports uncovered areas and failed systems honestly', async () 
   );
 });
 
+test('should say a bike-share system is not licensed when it is the only one covering the area', async () => {
+  const requested = [];
+  const catalog = composeCatalog({
+    tools: coreTools,
+    services: {
+      bikeshare: {
+        systems: [
+          { ...system('austin', 'Austin, TX', 30.27, -97.74), licensed: false },
+        ],
+        async getStations(url) {
+          requested.push(url);
+          return documents[url];
+        },
+        unlicensedFeedsEnabled: async () => false,
+      },
+    },
+  });
+  const result = await catalog.call('get_bike_share', { area: downtown });
+  assert.equal(
+    result.summary,
+    'Test Bikes disabled — not licensed for commercial use in this build.',
+  );
+  assert.deepEqual(result.data.systems, []);
+  assert.deepEqual(result.data.systems_disabled, ['Austin, TX']);
+  assert.deepEqual(requested, []);
+});
+
 const feed = {
   id: 'capmetro',
   name: 'CapMetro',
@@ -414,6 +441,8 @@ test('bike share names the systems it did not search', async () => {
       bikeshare: {
         systems: GBFS_CITY_REGISTRY,
         getStations: async () => empty,
+        // Philadelphia's Indego publishes no licence; this case opts it in.
+        unlicensedFeedsEnabled: async () => true,
       },
     },
   });
@@ -490,6 +519,8 @@ test('a whole-world bike-share search names every system it skipped', async () =
       bikeshare: {
         systems: GBFS_CITY_REGISTRY,
         getStations: async () => empty,
+        // Philadelphia's Indego publishes no licence; this case opts it in.
+        unlicensedFeedsEnabled: async () => true,
       },
     },
   }).call('get_bike_share', { area: { bbox: [-180, -90, 180, 90] } });

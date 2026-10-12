@@ -4,7 +4,7 @@
  *
  * The row's chips arm a click ("SET A", then click the globe; "SET B", click
  * again). With both ends placed the layer asks the existing `/api/route`
- * proxy (OSRM on the FOSSGIS servers, © OpenStreetMap contributors) for the
+ * proxy (the configured OSRM, © OpenStreetMap contributors) for the
  * street-following route with turn-by-turn steps, drapes it on the terrain
  * and 3D tiles with the same flowing dashes the voice "route from A to B"
  * annotation uses, and drops one dot per maneuver. Click a dot for the
@@ -841,9 +841,11 @@ export function createDirectionsLayer({ services, source }) {
         _error =
           payload?.error === 'no route found'
             ? 'No route found between A and B'
-            : payload?.error
-              ? `Routing failed: ${payload.error}`
-              : 'No route found between A and B';
+            : payload?.unavailable === true
+              ? payload.error
+              : payload?.error
+                ? `Routing failed: ${payload.error}`
+                : 'No route found between A and B';
         return;
       }
       _route = route;

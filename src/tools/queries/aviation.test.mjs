@@ -244,7 +244,7 @@ test('tracks are ordered and thinned to 200 points', async () => {
   );
 });
 
-test('aircraft info combines type and route lookups', async () => {
+test('should report aircraft type and registration when adsbdb answers', async () => {
   const aircraft = feed(civil, {
     enrichment: {
       'type:aaa111': {
@@ -253,31 +253,39 @@ test('aircraft info combines type and route lookups', async () => {
         typeName: 'Boeing 737-800',
         registration: 'N12345',
       },
-      'route:UAL123': {
-        found: true,
-        airline: 'United Airlines',
-        origin: { code: 'SFO', name: 'San Francisco', lat: 37.6, lon: -122.4 },
-        destination: { code: 'EWR', name: 'Newark', lat: 40.7, lon: -74.2 },
-      },
     },
   });
   const catalog = composeCatalog({ tools: coreTools, services: { aircraft } });
-  const both = await catalog.call('get_aircraft_info', {
-    icao24: 'AAA111',
-    callsign: 'ual123',
-  });
-  assert.equal(
-    both.summary,
-    'Aircraft aaa111 is Boeing 737-800 (N12345); flight UAL123 flies SFO to EWR (United Airlines).',
-  );
-  assert.equal(both.data.route.destination.name, 'Newark');
-  const unknown = await catalog.call('get_aircraft_info', { callsign: 'XYZ9' });
-  assert.equal(unknown.summary, 'No route is known for XYZ9.');
-  assert.deepEqual(unknown.data, { aircraft: null, route: null });
+  const known = await catalog.call('get_aircraft_info', { icao24: 'AAA111' });
+  assert.equal(known.summary, 'Aircraft aaa111 is Boeing 737-800 (N12345).');
+  assert.equal(known.data.aircraft.type_code, 'B738');
+  assert.equal('route' in known.data, false, 'route lookups are removed');
+  const unknown = await catalog.call('get_aircraft_info', { icao24: 'bbb222' });
+  assert.equal(unknown.summary, 'No type is known for bbb222.');
+  assert.deepEqual(unknown.data, { aircraft: null });
+  await assert.rejects(catalog.call('get_aircraft_info', {}), /icao24/);
   await assert.rejects(
-    catalog.call('get_aircraft_info', {}),
-    /icao24, callsign or both/,
+    catalog.call('get_aircraft_info', { callsign: 'UAL123' }),
+    /icao24|callsign/,
   );
+  assert.equal(
+    aircraft.calls.some((call) => String(call).startsWith('route:')),
+    false,
+    'no callsign route lookup is ever made',
+  );
+});
+
+test('should say the lookup is not licensed when adsbdb enrichment is disabled', async () => {
+  const aircraft = feed(civil, {
+    enrichment: { 'type:aaa111': { found: false, disabled: true } },
+  });
+  const catalog = composeCatalog({ tools: coreTools, services: { aircraft } });
+  const result = await catalog.call('get_aircraft_info', { icao24: 'aaa111' });
+  assert.equal(
+    result.summary,
+    'Aircraft type lookup (adsbdb) is disabled — not licensed for commercial use in this build.',
+  );
+  assert.deepEqual(result.data, { aircraft: null, disabled: true });
 });
 
 test('live source failures become tool errors with retry guidance', async () => {

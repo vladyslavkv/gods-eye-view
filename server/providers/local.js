@@ -27,6 +27,7 @@ import { firePerimetersProxy } from './firePerimeters.js';
 import { cycloneProxy } from './cyclones.js';
 import { disasterEventsProxy } from './disasterEvents.js';
 import { windProxy } from './wind.js';
+import { optInSourcesEndpoint } from './optInSources.js';
 
 /**
  * Construct the local provider plugins in their established order.
@@ -62,6 +63,7 @@ function localProviderPlugins({ realtime } = {}) {
     mapillaryProxy(),
     firePerimetersProxy(),
     disasterEventsProxy(),
+    optInSourcesEndpoint(),
     keySetupEndpoint(),
   ];
 }

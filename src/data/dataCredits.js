@@ -103,13 +103,10 @@ export const DATA_CREDITS = [
   {
     key: 'adsbdb',
     html:
-      'Aircraft type, registration &amp; flight routes: ' +
+      'Aircraft type &amp; registration (when enabled): ' +
       '<a href="https://www.adsbdb.com" target="_blank" rel="noopener">adsbdb</a> ' +
       '· aircraft data from PlaneBase · ICAO-to-N-number conversion by ' +
-      'Guillaume Michel · route data is the work of ' +
-      'David Taylor, Edinburgh, and Jim Mason, Glasgow, and may not be ' +
-      'copied, published, or incorporated into other databases without the ' +
-      'explicit permission of David J Taylor, Edinburgh',
+      'Guillaume Michel',
   },
   {
     key: 'fintraffic-ais',
@@ -249,14 +246,14 @@ export const DATA_CREDITS = [
   },
   {
     key: 'gbfs',
-    html: 'Bikeshare availability: GBFS operator feeds (e.g. Austin BCycle)',
+    html: 'Bikeshare availability: GBFS operator feeds (e.g. Lyft — Bay Wheels, Citi Bike)',
   },
   {
     key: 'osrm-routing',
     // The service asks for its attribution to carry a "fix the map" link, so
     // a reader who spots a wrong turn can go and correct the data it came from.
     html:
-      'Routing (voice routes and Directions): OSRM on the FOSSGIS servers — ' +
+      'Routing (voice routes and Directions), when configured: OSRM — e.g. the FOSSGIS servers ' +
       '<a href="https://routing.openstreetmap.de/about.html" target="_blank" rel="noopener">routing.openstreetmap.de</a> · ' +
       '<a href="https://www.openstreetmap.org/fixthemap" target="_blank" rel="noopener">fix the map</a>',
   },
@@ -343,10 +340,6 @@ export const DATA_CREDITS = [
     html:
       'CCTV cameras &amp; frames (Estonia road weather): Transpordiamet / Tarktee — ' +
       '<a href="https://tarktee.transpordiamet.ee/" target="_blank" rel="noopener">tarktee.transpordiamet.ee</a> (courtesy)',
-  },
-  {
-    key: 'warendorf-cctv',
-    html: 'Webcam (Warendorf): <a href="https://www.warendorf.de/" target="_blank" rel="noopener">Stadt Warendorf</a> (courtesy)',
   },
   {
     key: 'nsw-cctv',

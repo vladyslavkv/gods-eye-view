@@ -75,6 +75,10 @@ export function createState({ services }) {
   state._rotationPose = null;
   state._rotationDirty = false;
 
+  /** @type {object[]|null} Registry entries the server catalog serves; null until it answers. */
+  state._servedFeeds = null;
+  /** @type {string[]} Names of registered feeds in view that this build does not poll. */
+  state._unlicensedInRange = [];
   /** @type {Map<string, object>} feedId → registry entry currently polled */
   state._activeFeeds = new Map();
   /** @type {Map<string, {count:number, lastUpdate:number|null, error:string|null, stale:boolean, pollSeq:number, loading:boolean}>} */

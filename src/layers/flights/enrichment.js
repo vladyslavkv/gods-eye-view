@@ -108,27 +108,6 @@ export function createEnrichment({
     );
   }
 
-  function _requestRouteEnrichment(icao24) {
-    const cs = String(flightState.records.data.get(icao24)?.callsign || '')
-      .trim()
-      .toUpperCase();
-    if (!/^[A-Z]{3}\d/.test(cs)) return; // airline-style callsigns only (LLL + digit); GA tails won't resolve
-    _enqueueEnrich(
-      `r:${cs}`,
-      { kind: 'route', id: cs },
-      (data) => {
-        const meta = flightState.records.data.get(icao24);
-        if (!meta) return;
-        meta.airline = data.airline || meta.airline;
-        if (data.origin && data.destination)
-          meta.route = { origin: data.origin, destination: data.destination };
-        if (icao24 === flightState._trackedIcao && flightState._trackedEntity)
-          parts.tracking._updateTrackedLabelModel(icao24);
-      },
-      true,
-    ); // route lookups only fire for the TRACKED plane — front of the queue
-  }
-
   /** QA seam: headless harnesses (scripts/qa-enrich-ambient.mjs) shrink the
    *  bucket knobs via window.__GEV_ENRICH_AMBIENT_QA = {ceil, refillTokens,
    *  windowMs} — they cannot wait out a real 5-minute window. Read lazily each
@@ -232,7 +211,6 @@ export function createEnrichment({
     _enqueueEnrich,
     _drainEnrich,
     _requestTypeEnrichment,
-    _requestRouteEnrichment,
     _ambientBudgetKnobs,
     _refillAmbientBudget,
     _sweepAmbientEnrichment,

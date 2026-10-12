@@ -401,19 +401,26 @@ export async function geocodeKeyless(query, options) {
   return (await geocodeKeylessWithOutcome(query, options)).place;
 }
 
-/** Construct an independent Photon provider with a bounded query cache. */
+/**
+ * Construct an independent Photon provider with a bounded query cache.
+ * `enabled` gates every query: a disabled provider answers "no place" without
+ * a request, so the chain moves on to its next geocoder.
+ */
 export function createPhotonGeocoder({
   fetchImpl = (...args) => fetch(...args),
   endpoint = PHOTON_ENDPOINT,
+  enabled = async () => true,
 } = {}) {
   const cache = new Map();
   return {
-    geocode: (query, options = {}) =>
-      geocodeKeylessWithOutcome(query, {
-        ...options,
-        fetchImpl,
-        cache,
-        endpoint,
-      }),
+    geocode: async (query, options = {}) =>
+      (await enabled())
+        ? geocodeKeylessWithOutcome(query, {
+            ...options,
+            fetchImpl,
+            cache,
+            endpoint,
+          })
+        : { place: null, answered: true },
   };
 }

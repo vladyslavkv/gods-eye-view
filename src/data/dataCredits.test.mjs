@@ -18,21 +18,13 @@ test('every credit carries a unique key and some markup to render', () => {
   }
 });
 
-test('adsbdb is credited and carries its published route-data restriction', () => {
+test('should credit adsbdb for aircraft data only when route lookups are removed', () => {
   const credit = DATA_CREDITS.find((entry) => entry.key === 'adsbdb');
-  assert.ok(
-    credit,
-    'adsbdb supplies aircraft type and routes and must be credited',
-  );
-  // adsbdb publishes this restriction for its route data. Pin the provider's
-  // credits and restriction here so a later edit cannot silently remove them.
-  assert.match(credit.html, /David Taylor, Edinburgh/);
-  assert.match(credit.html, /Jim Mason, Glasgow/);
-  assert.match(
-    credit.html,
-    /may not be\s+copied, published, or incorporated into other databases/,
-  );
-  assert.match(credit.html, /explicit permission of David J Taylor, Edinburgh/);
+  assert.ok(credit, 'adsbdb supplies aircraft type when enabled');
+  // Route data "may not be copied, published, or incorporated into other
+  // databases" without its author's permission, so the app no longer uses it
+  // and the credit must not claim it does.
+  assert.doesNotMatch(credit.html, /route/i);
   assert.match(credit.html, /PlaneBase/);
   assert.match(credit.html, /Guillaume Michel/);
   assert.match(credit.html, /href="https:\/\/www\.adsbdb\.com"/);

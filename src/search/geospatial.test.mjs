@@ -238,3 +238,59 @@ test('regional place lookup uses bundled Natural Earth with networking unavailab
   );
   assert.equal((await lookup({ latitude: 26, longitude: -90 })).kind, 'marine');
 });
+
+const photonHit = () =>
+  json({
+    features: [
+      {
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [-97, 30] },
+        properties: { name: 'Town' },
+      },
+    ],
+  });
+
+test('should skip public Photon and fall back to Nominatim when Photon is not opted in', async () => {
+  const asked = [];
+  const service = createDefaultPlaceSearch({
+    fetchImpl: async (url) => {
+      const href = String(url);
+      asked.push(href.split('?')[0]);
+      if (href === '/api/opt-in-sources')
+        return json({ sources: { photon: false } });
+      if (href.startsWith('/api/geocode'))
+        return json({
+          status: 'OK',
+          results: [
+            {
+              formatted_address: 'Town',
+              geometry: { location: { lat: 31, lng: -98 } },
+              types: ['locality'],
+            },
+          ],
+        });
+      throw new Error(`unexpected ${href}`);
+    },
+  });
+  assert.equal((await service.geocode('Town')).place.lat, 31);
+  assert.equal(
+    asked.some((url) => url.includes('photon.komoot.io')),
+    false,
+  );
+  assert.ok(asked.includes('/api/geocode'));
+});
+
+test('should use public Photon when the server reports PHOTON_ENABLED', async () => {
+  const asked = [];
+  const service = createDefaultPlaceSearch({
+    fetchImpl: async (url) => {
+      const href = String(url);
+      asked.push(href);
+      if (href === '/api/opt-in-sources')
+        return json({ sources: { photon: true } });
+      assert.equal(new URL(href).hostname, 'photon.komoot.io');
+      return photonHit();
+    },
+  });
+  assert.equal((await service.geocode('Town')).place.lat, 30);
+});

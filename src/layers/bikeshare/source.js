@@ -1,8 +1,13 @@
+import { createOptInSources } from '../../sources/optInSources.js';
+
 /** Read a GBFS station document through the existing bounded server proxy. */
 export function createBikeshareSource({
   fetchImpl = (...args) => globalThis.fetch(...args),
 } = {}) {
+  const optIn = createOptInSources({ fetchImpl });
   return {
+    /** Whether the server opted in to feeds without published commercial terms. */
+    unlicensedFeedsEnabled: () => optIn('gbfs-unlicensed'),
     async getStations(upstreamUrl, { signal } = {}) {
       const url = new URL(upstreamUrl);
       if (url.protocol !== 'https:' || url.username || url.password || url.hash)

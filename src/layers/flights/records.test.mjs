@@ -106,3 +106,20 @@ test('ground transitions preserve last render height while a surface cell is col
   assert.equal(next.meta.renderAltitudeM, 1040);
   assert.equal(next.meta.wasAirborne, true);
 });
+
+test('should classify from the feed type code when adsbdb enrichment is off', () => {
+  const store = records();
+  const first = store.receive(
+    observation({ typeCode: 'B738', registration: 'N12345' }),
+    view(),
+  );
+  assert.equal(first.meta.typeCode, 'B738');
+  assert.equal(first.meta.registration, 'N12345');
+  assert.equal(first.meta.klass, 'airliner');
+  const second = store.receive(
+    observation({ typeCode: null, registration: null }),
+    view(),
+  );
+  assert.equal(second.meta.typeCode, 'B738', 'sticky across a blank poll');
+  assert.equal(second.meta.registration, 'N12345');
+});
