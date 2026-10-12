@@ -152,6 +152,14 @@ export const DATA_CREDITS = [
       ' · Incident information: ' +
       '<a href="https://inciweb.wildfire.gov/" target="_blank" rel="noopener">InciWeb</a>',
   },
+  {
+    key: 'gdacs',
+    html:
+      'Disaster events: <a href="https://www.gdacs.org/" target="_blank" rel="noopener">GDACS</a>, ' +
+      'European Commission Joint Research Centre ' +
+      '(<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>); ' +
+      'modified (filtered, restyled)',
+  },
   OSM_CREDIT,
   OPENMAPTILES_CREDIT,
   {

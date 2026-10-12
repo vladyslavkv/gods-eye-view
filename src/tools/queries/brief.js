@@ -62,6 +62,13 @@ const SECTIONS = [
     tool: 'get_cyclones',
     args: (area) => ({ area: area.argument }),
   },
+  {
+    key: 'disasters',
+    layer: 'disaster-events',
+    label: 'Disaster alerts',
+    tool: 'get_disaster_events',
+    args: (area) => ({ area: area.argument, limit: SECTION_LIMIT }),
+  },
 ];
 
 /** Military contacts around a point, as the app's military awareness panel. */
@@ -180,7 +187,8 @@ export const situationBrief = defineTool({
   title: 'Situation brief',
   description:
     'One overview of an area: current weather, recent earthquakes, active ' +
-    'fires, aircraft overhead, ships and tropical cyclones, each summarized with ' +
+    'fires, aircraft overhead, ships, tropical cyclones and GDACS disaster ' +
+    'alerts, each summarized with ' +
     'its top items. Sections that are unavailable are marked as such.',
   inputSchema: {
     type: 'object',

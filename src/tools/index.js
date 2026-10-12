@@ -24,7 +24,11 @@ import {
   getTerrainHeight,
   getWeather,
 } from './queries/environment.js';
-import { getActiveFires, getEarthquakes } from './queries/hazards.js';
+import {
+  getActiveFires,
+  getDisasterEvents,
+  getEarthquakes,
+} from './queries/hazards.js';
 import { getRecentImagery } from './queries/imagery.js';
 import { findInfrastructure } from './queries/infrastructure.js';
 import {
@@ -84,6 +88,7 @@ export {
 export const coreTools = Object.freeze([
   getEarthquakes,
   getActiveFires,
+  getDisasterEvents,
   getRecentLaunches,
   aircraftInArea,
   findAircraft,

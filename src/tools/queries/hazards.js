@@ -4,6 +4,7 @@ import { suggestView } from '../views.js';
 import { defineTool, ToolError } from '../catalog.js';
 import { AREA_SCHEMA, areaContains, resolveArea } from '../area.js';
 import { LIMIT_SCHEMA, capRows, countNoun, isoTime } from '../results.js';
+import { EVENT_TYPE_LABELS } from '../../layers/disasterEvents/records.js';
 
 export const getEarthquakes = defineTool({
   name: 'get_earthquakes',
@@ -118,6 +119,110 @@ export const getActiveFires = defineTool({
             [fire.acqDate, fire.acqTime].filter(Boolean).join(' ') || null,
           satellite: fire.satellite ?? null,
           day_night: fire.daynight ?? null,
+        })),
+      },
+    };
+  },
+});
+
+const ALERT_ORDER = ['green', 'orange', 'red'];
+
+export const getDisasterEvents = defineTool({
+  name: 'get_disaster_events',
+  title: 'Disaster events',
+  description:
+    'Current disaster alerts from GDACS (Global Disaster Alert and ' +
+    'Coordination System, EC Joint Research Centre): earthquakes, tropical ' +
+    'cyclones, floods, volcanoes, wildfires and droughts with their ' +
+    'green/orange/red alert level, most severe first. Optionally filtered ' +
+    'by type, minimum alert level and area.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      area: AREA_SCHEMA,
+      types: {
+        type: 'array',
+        items: { type: 'string', enum: Object.keys(EVENT_TYPE_LABELS) },
+        minItems: 1,
+        description:
+          'EQ earthquake, TC tropical cyclone, FL flood, VO volcano, WF wildfire, DR drought.',
+      },
+      min_alert: { type: 'string', enum: ALERT_ORDER },
+      limit: LIMIT_SCHEMA,
+    },
+    additionalProperties: false,
+  },
+  requires: ['disasters'],
+  async run(args, { services, signal }) {
+    const area = args.area
+      ? await resolveArea(args.area, { services, signal })
+      : null;
+    const snapshot = await services.disasters.getSnapshot({ signal });
+    if (snapshot.unavailable)
+      throw new ToolError(
+        'unavailable',
+        'GDACS disaster events are unavailable right now',
+      );
+    const rank = (event) => ALERT_ORDER.indexOf(event.alertLevel);
+    const minimum = ALERT_ORDER.indexOf(args.min_alert ?? 'green');
+    const events = snapshot.events
+      .filter(
+        (event) =>
+          (!args.types || args.types.includes(event.type)) &&
+          rank(event) >= minimum &&
+          (!area || areaContains(area, event)),
+      )
+      .sort(
+        (a, b) =>
+          rank(b) - rank(a) ||
+          String(b.modifiedAt ?? '').localeCompare(
+            String(a.modifiedAt ?? ''),
+          ) ||
+          a.id.localeCompare(b.id),
+      );
+    const result = capRows(events, args.limit);
+    const stale = snapshot.stale === true;
+    const top = events[0];
+    const where = area ? ` in ${area.label}` : ' worldwide';
+    const severest = top
+      ? `; most severe: ${top.alertLevel[0].toUpperCase()}${top.alertLevel.slice(1)} ` +
+        `${EVENT_TYPE_LABELS[top.type].toLowerCase()} ${top.name}` +
+        (top.country ? ` (${top.country})` : '')
+      : '';
+    return {
+      summary:
+        `${countNoun(events.length, 'GDACS disaster event')}${where}${severest}` +
+        (stale ? ' (data may be stale).' : '.'),
+      data: {
+        view: suggestView(
+          services,
+          area
+            ? { area, layers: ['disaster-events'] }
+            : {
+                point: { lat: 20, lon: 0 },
+                altitudeM: 15_000_000,
+                layers: ['disaster-events'],
+              },
+        ),
+        stale,
+        fetched_at: isoTime(snapshot.fetchedAt),
+        source: snapshot.source ?? null,
+        attribution: snapshot.attribution ?? null,
+        ...result,
+        rows: result.rows.map((event) => ({
+          id: event.id,
+          type: event.type,
+          type_label: EVENT_TYPE_LABELS[event.type],
+          name: event.name,
+          alert_level: event.alertLevel,
+          country: event.country,
+          severity: event.severity,
+          from: event.fromDate,
+          to: event.toDate,
+          current: event.isCurrent,
+          lat: event.lat,
+          lon: event.lon,
+          report_url: event.reportUrl,
         })),
       },
     };

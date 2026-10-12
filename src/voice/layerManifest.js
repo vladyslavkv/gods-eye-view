@@ -193,6 +193,31 @@ const layers = [
     },
   },
   {
+    id: 'disaster-events',
+    aliases: [
+      'disaster events',
+      'disasters',
+      'gdacs',
+      'disaster alerts',
+      'natural disasters',
+    ],
+    context: false,
+    query: {
+      fields: {
+        type: ['t'],
+        typeLabel: ['t'],
+        name: ['t'],
+        alertLevel: ['t'],
+        country: ['t'],
+        severity: ['t'],
+        isCurrent: ['f'],
+        fromTime: ['ms'],
+        toTime: ['ms'],
+      },
+      timeField: 'fromTime',
+    },
+  },
+  {
     id: 'weather-cyclones',
     aliases: ['cyclones', 'hurricanes', 'typhoons', 'tropical storms'],
     context: false,

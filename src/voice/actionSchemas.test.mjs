@@ -38,7 +38,8 @@ test('the complete Realtime tool payload pins the manifest-generated layer relea
     // requested radius and center authority in descriptions only.
     // Street Level adds its toggle enum values and generated alias hint.
     // The removed non-commercial cable layer drops its enum value and aliases.
-    'a5b8801331f39a508fa41103a27a2a0b8063313a6010c886b013cf4614bc49f1',
+    // GDACS disaster events add their layer enum value, aliases and fields.
+    'b1b4fc700988b98477e58480432df2b8568bcf32b39e57b95f503f7aff44c76d',
   );
 });
 

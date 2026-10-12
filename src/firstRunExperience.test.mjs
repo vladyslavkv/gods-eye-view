@@ -675,10 +675,11 @@ test('the voice TOOL SCHEMA matches the pinned contract — the mission mapping 
   // list descriptions; the missions still ride existing tools.
   // Street Level adds toggle enum values and the generated alias hint.
   // The removed non-commercial cable layer drops its enum value and aliases.
-  assert.equal(block.length, 29671, 'serialized tool schema length drifted');
+  // GDACS disaster events add their layer enum value, aliases and fields.
+  assert.equal(block.length, 29860, 'serialized tool schema length drifted');
   assert.equal(
     crypto.createHash('sha256').update(block).digest('hex'),
-    '8270a10b5c63e237163dcab5d043cc628af1aad3276b296606d3f813a3f0c2a3',
+    'd519e3521d505a5fcace9592f88b4a3bc9ce965b186245dfceeb060e654c60f7',
     'the first-run missions must ride EXISTING tools: no schema edit, no cache bust',
   );
   const instructions = fs.readFileSync(new URL('../server/providers/openai/instructions.js', import.meta.url), 'utf8');
