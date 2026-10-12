@@ -188,7 +188,12 @@ function installGoogleMocks(t, handler) {
     setTimeout: globalThis.setTimeout,
     clearTimeout: globalThis.clearTimeout,
   };
-  globalThis.fetch = handler;
+  // The keyless cases rely on the public Photon instance, which the server
+  // must opt in to; every request still reaches the test's own handler.
+  globalThis.fetch = (url, init) =>
+    String(url) === '/api/opt-in-sources'
+      ? Promise.resolve(Response.json({ sources: { photon: true } }))
+      : handler(url, init);
   t.after(() => {
     if (originalWindow === undefined) delete globalThis.window;
     else globalThis.window = originalWindow;

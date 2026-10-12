@@ -3167,7 +3167,12 @@ function installKeyedFetch(t, handler) {
   const priorKey = globalThis.window.__GOOGLE_MAPS_API_KEY__;
   const priorFetch = globalThis.fetch;
   globalThis.window.__GOOGLE_MAPS_API_KEY__ = 'unit-test-key';
-  globalThis.fetch = handler;
+  // The keyless path uses the public Photon instance, which the server must
+  // opt in to; every other request still reaches the test's own handler.
+  globalThis.fetch = (url, init) =>
+    String(url) === '/api/opt-in-sources'
+      ? Promise.resolve(Response.json({ sources: { photon: true } }))
+      : handler(url, init);
   t.after(() => {
     globalThis.fetch = priorFetch;
     if (priorKey === undefined) delete globalThis.window.__GOOGLE_MAPS_API_KEY__;
