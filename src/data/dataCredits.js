@@ -326,10 +326,6 @@ export const DATA_CREDITS = [
       '<a href="https://tarktee.transpordiamet.ee/" target="_blank" rel="noopener">tarktee.transpordiamet.ee</a> (courtesy)',
   },
   {
-    key: 'warendorf-cctv',
-    html: 'Webcam (Warendorf): <a href="https://www.warendorf.de/" target="_blank" rel="noopener">Stadt Warendorf</a> (courtesy)',
-  },
-  {
     key: 'nsw-cctv',
     html:
       'CCTV cameras &amp; frames (New South Wales): ' +

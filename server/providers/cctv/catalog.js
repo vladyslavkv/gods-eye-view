@@ -14,7 +14,6 @@ import {
   loadTxdotSourcesFromOpenData,
   loadTallinnSourcesFromCatalog,
   loadTarkteeSourcesFromDatex,
-  loadWarendorfSourcesFromCatalog,
   loadNswSourcesFromOpenData,
   loadCalgarySourcesFromOpenData,
   loadDelDOTSourcesFromOpenData,
@@ -25,17 +24,25 @@ import {
 const envEnabled = (name) => String(process.env[name] || '1').trim() !== '0';
 
 /**
+ * Env opt-in: only "1" enables. For packs with no verifiable commercial terms
+ * (docs/COMMERCIAL_CONFIG.md, "Opt-in sources") — off unless the operator
+ * has cleared the terms for their own deployment.
+ */
+const envOptIn = (name) => String(process.env[name] || '').trim() === '1';
+
+/**
  * Live open-data packs, in merge order. Adding a region is one entry here
  * plus its loader in sources.js; the catalog cap is shared across entries
  * round-robin (cap.js), so a new pack never silently evicts an older one.
  * Each pack fails independently (allSettled) and is gated by its own env
- * kill switch.
+ * switch: a kill switch (`=0` disables) or, for packs without verifiable
+ * commercial terms, an opt-in (`=1` enables).
  */
 const LIVE_PACKS = [
   { name: 'austin', enabled: () => true, load: loadAustinSourcesFromOpenData },
   {
     name: 'caltrans',
-    enabled: () => true,
+    enabled: () => envOptIn('CCTV_CALTRANS_ENABLED'),
     load: loadCaltransSourcesFromOpenData,
   },
   {
@@ -45,7 +52,7 @@ const LIVE_PACKS = [
   },
   {
     name: 'ontario',
-    enabled: () => envEnabled('CCTV_ONTARIO_ENABLED'),
+    enabled: () => envOptIn('CCTV_ONTARIO_ENABLED'),
     load: loadOntarioSourcesFromOpenData,
   },
   {
@@ -60,23 +67,18 @@ const LIVE_PACKS = [
   },
   {
     name: 'txdot',
-    enabled: () => envEnabled('CCTV_TXDOT_ENABLED'),
+    enabled: () => envOptIn('CCTV_TXDOT_ENABLED'),
     load: loadTxdotSourcesFromOpenData,
   },
   {
     name: 'tallinn',
-    enabled: () => envEnabled('CCTV_TALLINN_ENABLED'),
+    enabled: () => envOptIn('CCTV_TALLINN_ENABLED'),
     load: loadTallinnSourcesFromCatalog,
   },
   {
     name: 'tarktee',
-    enabled: () => envEnabled('CCTV_TARKTEE_ENABLED'),
+    enabled: () => envOptIn('CCTV_TARKTEE_ENABLED'),
     load: loadTarkteeSourcesFromDatex,
-  },
-  {
-    name: 'warendorf',
-    enabled: () => envEnabled('CCTV_WARENDORF_ENABLED'),
-    load: loadWarendorfSourcesFromCatalog,
   },
   {
     name: 'nsw',
@@ -90,7 +92,7 @@ const LIVE_PACKS = [
   },
   {
     name: 'deldot',
-    enabled: () => envEnabled('CCTV_DELDOT_ENABLED'),
+    enabled: () => envOptIn('CCTV_DELDOT_ENABLED'),
     load: loadDelDOTSourcesFromOpenData,
   },
   {

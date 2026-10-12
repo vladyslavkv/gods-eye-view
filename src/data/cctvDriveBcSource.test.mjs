@@ -222,7 +222,7 @@ test('CCTV catalog merges DriveBC cameras and CCTV_DRIVEBC_ENABLED=0 skips the r
 });
 
 test('default per-pack camera caps fit inside the default catalog cap', () => {
-  // Every default pack at its own cap (Warendorf ships 1 curated camera).
+  // Every pack at its own cap, the opt-in packs included.
   const packs =
     DEFAULT_AUSTIN_MAX_SOURCES +
     DEFAULT_CALTRANS_MAX_SOURCES +
@@ -233,8 +233,7 @@ test('default per-pack camera caps fit inside the default catalog cap', () => {
     DEFAULT_TXDOT_MAX_SOURCES +
     DEFAULT_TALLINN_MAX_SOURCES +
     DEFAULT_TARKTEE_MAX_SOURCES +
-    DEFAULT_NSW_MAX_SOURCES +
-    1;
+    DEFAULT_NSW_MAX_SOURCES;
   assert.ok(
     packs <= DEFAULT_CCTV_MAX_SOURCES,
     `default packs (${packs}) would be thinned by the catalog cap (${DEFAULT_CCTV_MAX_SOURCES})`,

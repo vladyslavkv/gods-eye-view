@@ -529,7 +529,6 @@
   "src/data/cctvGroundHeights.test.mjs",
   "src/data/cctvFootprint.test.mjs",
   "src/data/cctvEstonia.test.mjs",
-  "src/data/cctvWarendorf.test.mjs",
   "src/data/cctvCalgary.test.mjs",
   "src/data/cctvVegvesen.test.mjs",
   "src/data/cctvNswSource.test.mjs",
