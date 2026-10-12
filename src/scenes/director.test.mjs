@@ -76,7 +76,7 @@ const REGISTERED = [
   'flights', 'military', 'earthquakes', 'satellites', 'rocket-launches', 'traffic',
   'cctv', 'radio', 'bikeshare', 'ais-live-vessels', 'military-installations',
   'military-awareness', 'local-datacenters', 'local-dams',
-  'local-firms',
+  'submarine-cables', 'local-firms',
 ];
 
 /** Layers Space Missions permits while it isolates the globe (contextModePolicy). */

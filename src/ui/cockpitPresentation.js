@@ -58,7 +58,7 @@ export const COCKPIT_BRIEF_PAGES = [
     id: 'local',
     kicker: 'LOCAL INFO',
     subtitle: 'PLACE / CONDITIONS / POSITION',
-    source: 'NATURAL EARTH · OPEN-METEO · UTC',
+    source: 'NATURAL EARTH · MET NORWAY FORECAST · UTC',
   },
 ];
 

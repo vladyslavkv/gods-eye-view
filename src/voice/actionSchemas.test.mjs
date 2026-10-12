@@ -37,9 +37,9 @@ test('the complete Realtime tool payload pins the manifest-generated layer relea
     // omit top-level anyOf (OpenAI rejects it). Contacts list routing preserves
     // requested radius and center authority in descriptions only.
     // Street Level adds its toggle enum values and generated alias hint.
-    // The removed non-commercial cable layer drops its enum value and aliases.
+    // Submarine cables return on OpenStreetMap data as 'submarine-cables'.
     // GDACS disaster events add their layer enum value, aliases and fields.
-    'b1b4fc700988b98477e58480432df2b8568bcf32b39e57b95f503f7aff44c76d',
+    '373a68bad1302804fbd422c1e18510e8098fed3b4ddc281e44e64fdb82ee1df4',
   );
 });
 

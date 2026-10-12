@@ -69,7 +69,8 @@ export function createFlightSource({
           source:
             header(response, 'x-flight-source') ||
             feedSource(response, 'Flights'),
-          coverage: header(response, 'x-flight-coverage') || 'upstream snapshot',
+          coverage:
+            header(response, 'x-flight-coverage') || 'upstream snapshot',
           now: now(),
         }),
         status: response.status,
@@ -188,7 +189,10 @@ export function createVesselSource({
         throw error;
       }
       return {
-        ...vesselSnapshot(payload, { source: feedSource(response, 'Vessels') }),
+        ...vesselSnapshot(payload, {
+          source: feedSource(response, 'Vessels'),
+          coverage: header(response, 'x-feed-coverage') || undefined,
+        }),
         status: response.status,
       };
     },

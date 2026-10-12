@@ -81,6 +81,7 @@ export function ingestAisStreamEnvelope(envelope) {
     // Use the AIS message's own report time, not server ingest wall-clock —
     // trail spacing and dead reckoning depend on true fix epochs.
     last_position_epoch: aisEpochSeconds(metadata.time_utc ?? metadata.TimeUtc),
+    source: 'AISStream',
     _updatedAt: Date.now(),
   });
 
@@ -93,6 +94,60 @@ export function ingestAisStreamEnvelope(envelope) {
 
   pruneAisStreamCache();
   return true;
+}
+
+/**
+ * Store a batch of already-decoded vessel positions from a polled source.
+ *
+ * Each row carries its own observation time, which becomes the row's age, so a
+ * position reported 20 minutes ago expires on the same clock as a streamed
+ * one. A position older than one already held for that MMSI (from any source)
+ * is ignored. The cache is pruned once per batch, not once per row.
+ *
+ * @param {Array<{mmsi:string,lat:number,lon:number,name?:string,imo?:string,
+ *   type?:string,destination?:string,speed?:number|null,course?:number|null,
+ *   heading?:number|null,observedAtMs:number,source:string}>} positions
+ * @returns {number} Rows stored.
+ */
+export function ingestVesselPositions(positions) {
+  const now = Date.now();
+  const cutoff = now - AISSTREAM_STALE_MS;
+  let stored = 0;
+  for (const position of positions) {
+    const mmsi = stringValue(position?.mmsi);
+    const lat = numberValue(position?.lat);
+    const lon = numberValue(position?.lon);
+    const observedAtMs = Math.min(
+      numberValue(position?.observedAtMs) ?? 0,
+      now,
+    );
+    if (!mmsi || lat === null || lon === null || observedAtMs < cutoff)
+      continue;
+    const existing = _aisStreamVessels.get(mmsi);
+    if (existing && existing._updatedAt > observedAtMs) continue;
+    const epochSec = Math.floor(observedAtMs / 1000);
+    _aisStreamVessels.set(mmsi, {
+      lat,
+      lon,
+      name: stringValue(position.name) || existing?.name || `MMSI ${mmsi}`,
+      mmsi,
+      imo: stringValue(position.imo) || existing?.imo || '',
+      type: stringValue(position.type) || existing?.type || '',
+      destination:
+        stringValue(position.destination) || existing?.destination || '',
+      speed: normalizedSpeedOverGround(position.speed),
+      course: normalizedCourseOverGround(position.course),
+      heading: normalizedHeading(position.heading),
+      last_position_UTC: new Date(observedAtMs).toISOString(),
+      last_position_epoch: epochSec,
+      source: stringValue(position.source),
+      _updatedAt: observedAtMs,
+    });
+    appendAisTrackSample(mmsi, lat, lon, epochSec);
+    stored += 1;
+  }
+  pruneAisStreamCache();
+  return stored;
 }
 
 /**

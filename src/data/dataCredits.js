@@ -6,8 +6,8 @@ import * as Cesium from 'cesium';
  * Legal requirement (see DATA_SOURCES.md, findings H10/H11 in
  * docs/pre-ship-audit-2026-07-01.md): every third-party data layer this app can
  * display carries its own license and required attribution — ODbL (OSM
- * datacenters/dams, adsb.lol, Overpass roads), NASA FIRMS, CelesTrak, USGS,
- * City of Austin, Fintraffic (CC BY 4.0),
+ * datacenters/dams/submarine cables, adsb.lol, Overpass roads), NASA FIRMS,
+ * CelesTrak, USGS, City of Austin, Fintraffic (CC BY 4.0),
  * The MIT code license does NOT cover this data.
  *
  * These credits are registered ONCE at init as STATIC credits with
@@ -112,9 +112,16 @@ export const DATA_CREDITS = [
       'explicit permission of David J Taylor, Edinburgh',
   },
   {
+    key: 'fintraffic-ais',
+    html:
+      'Vessels: Fintraffic / ' +
+      '<a href="https://www.digitraffic.fi/en/" target="_blank" rel="noopener">digitraffic.fi</a>, ' +
+      'license <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>',
+  },
+  {
     key: 'aisstream',
     html:
-      'Live vessels (AIS): ' +
+      'Live vessels (AIS, worldwide, operator opt-in): ' +
       '<a href="https://aisstream.io" target="_blank" rel="noopener">AISStream.io</a>',
   },
   {
@@ -171,11 +178,11 @@ export const DATA_CREDITS = [
     html: 'Keyless place search: <a href="https://photon.komoot.io" target="_blank" rel="noopener">Photon</a> (komoot)',
   },
   {
-    key: 'open-meteo',
+    key: 'met-norway',
     html:
-      'Cockpit current conditions: ' +
-      '<a href="https://open-meteo.com/en/licence" target="_blank" rel="noopener">Weather data by Open-Meteo.com</a> ' +
-      '(CC BY 4.0)',
+      'Cockpit current-hour forecast: ' +
+      '<a href="https://api.met.no/doc/License" target="_blank" rel="noopener">Weather data from MET Norway</a> ' +
+      '(<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>; values converted and mapped to cockpit conditions)',
   },
   {
     key: 'gdelt',
@@ -303,6 +310,10 @@ export const DATA_CREDITS = [
   {
     key: 'dams',
     html: 'Dams: Open Infrastructure Map',
+  },
+  {
+    key: 'osm-submarine-cables',
+    html: 'Submarine cables: © OpenStreetMap contributors (ODbL)',
   },
   {
     key: 'firms',

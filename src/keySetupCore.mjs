@@ -63,7 +63,8 @@ export const KEY_SETUP_KEYS = Object.freeze([
   Object.freeze({
     id: 'aisstream',
     title: 'AISSTREAM',
-    unlocks: 'Live ships, worldwide',
+    unlocks:
+      'Live ships worldwide — runs only with AISSTREAM_COMMERCIAL_OK=1 too (AISStream publishes no terms; see docs/COMMERCIAL_CONFIG.md). Baltic ships need no key',
     getUrl: 'https://aisstream.io',
     envVars: Object.freeze(['AISSTREAM_API_KEY']),
     tier: 'free',

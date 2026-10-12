@@ -56,6 +56,17 @@ test('OpenStreetMap has one generic data credit with separate tile and names dis
   );
 });
 
+test('should credit submarine cables to OpenStreetMap contributors when the layer is bundled', () => {
+  const credit = DATA_CREDITS.find(
+    (entry) => entry.key === 'osm-submarine-cables',
+  );
+  assert.equal(
+    credit?.html,
+    'Submarine cables: © OpenStreetMap contributors (ODbL)',
+  );
+  assert.ok(DATA_CREDITS.every((entry) => !/telegeography/i.test(entry.html)));
+});
+
 test('inline OSM attribution persists until its last display owner leaves', async (t) => {
   const { showOsmCredit, hideOsmCredit } = await import('./dataCredits.js');
   t.mock.timers.enable({ apis: ['setTimeout'] });
@@ -119,4 +130,11 @@ test('tile attribution follows source changes and viewers have independent owner
   hideOsmCredit(a, 'installations');
   assert.equal(a.credits.size, 0);
   assert.equal(b.credits.size, 1);
+});
+
+test('should credit Fintraffic under CC BY 4.0 when vessels come from Digitraffic', () => {
+  const credit = DATA_CREDITS.find((entry) => entry.key === 'fintraffic-ais');
+  assert.ok(credit, 'Digitraffic vessels need their CC BY 4.0 credit');
+  assert.match(credit.html, /^Vessels: Fintraffic \/ <a [^>]*digitraffic\.fi/);
+  assert.match(credit.html, /license <a [^>]*>CC BY 4\.0<\/a>/);
 });

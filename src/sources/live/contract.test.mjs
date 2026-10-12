@@ -56,7 +56,9 @@ test('civil observations retain identity, separate altitude datums and source ep
 test('mixed-invalid and duplicate admissions are explicitly incomplete; all-invalid rejects', () => {
   const invalid = [...aircraft];
   invalid[5] = 181;
-  const partial = stateVectorSnapshot({ states: [aircraft, invalid, aircraft] });
+  const partial = stateVectorSnapshot({
+    states: [aircraft, invalid, aircraft],
+  });
   assert.equal(partial.records.length, 1);
   assert.equal(partial.complete, false);
   assert.equal(partial.rejectedCount, 2);
@@ -316,4 +318,68 @@ test('identity lookup validates its response and honors body-parse cancellation'
   await assert.rejects(source.getIdentities({}, { signal: abort.signal }), {
     name: 'AbortError',
   });
+});
+
+test('should read an empty complete vessel snapshot as current coverage when the server names its snapshot time', async () => {
+  const source = createVesselSource({
+    fetchImpl: async () =>
+      response(
+        {
+          status: 'live',
+          rows: [],
+          complete: true,
+          snapshotAt: now,
+          lastMessageAt: now,
+        },
+        {
+          'X-Feed-Source': 'Digitraffic',
+          'X-Feed-Coverage': 'Finland and the Baltic Sea',
+        },
+      ),
+  });
+  const snapshot = await source.getSnapshot();
+  assert.equal(snapshot.freshness, 'current');
+  assert.equal(snapshot.complete, true);
+  assert.equal(snapshot.observedAtMs, null, 'no position time is invented');
+  assert.equal(snapshot.source, 'Digitraffic');
+  assert.equal(snapshot.coverage, 'Finland and the Baltic Sea');
+});
+
+test('should keep an empty vessel snapshot unknown when the server does not declare complete coverage', async () => {
+  for (const payload of [
+    { status: 'live', rows: [], snapshotAt: now },
+    { status: 'live', rows: [], complete: true },
+    {
+      status: 'live',
+      rows: [],
+      complete: true,
+      snapshotAt: now,
+      refreshing: true,
+    },
+  ]) {
+    const source = createVesselSource({
+      fetchImpl: async () => response(payload),
+    });
+    assert.notEqual(
+      (await source.getSnapshot()).freshness,
+      'current',
+      JSON.stringify(payload),
+    );
+  }
+});
+
+test('should carry each vessel row source name onto its observation when normalizing', () => {
+  assert.equal(
+    normalizeVesselObservation({
+      mmsi: '230000001',
+      lat: 60,
+      lon: 25,
+      source: 'Digitraffic',
+    }).source,
+    'Digitraffic',
+  );
+  assert.equal(
+    normalizeVesselObservation({ mmsi: '230000001', lat: 60, lon: 25 }).source,
+    '',
+  );
 });

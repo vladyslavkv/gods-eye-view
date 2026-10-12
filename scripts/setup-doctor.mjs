@@ -131,7 +131,9 @@ export function buildCapabilitySummary(credentials) {
     voice: configured('OPENAI_API_KEY')
       ? 'available'
       : 'off until an OpenAI key is added, or a Codex ChatGPT sign-in is selected in Provider Settings (experimental)',
-    vessels: configured('AISSTREAM_API_KEY') ? 'live AISStream feed' : 'off until an AISStream key is added',
+    vessels: configured('AISSTREAM_API_KEY')
+      ? 'Fintraffic Digitraffic keyless Baltic feed; AISStream key present — worldwide only with AISSTREAM_COMMERCIAL_OK=1'
+      : 'Fintraffic Digitraffic keyless Baltic feed (AISStream worldwide is opt-in: key + AISSTREAM_COMMERCIAL_OK=1)',
     fires: configured('FIRMS_MAP_KEY') ? 'live NASA FIRMS feed' : 'off until a FIRMS key is added',
     traffic: configured('TOMTOM_API_KEY') ? 'live TomTom flow' : 'built-in traffic simulation',
     missions: configured('LL2_API_TOKEN')
