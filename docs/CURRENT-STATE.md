@@ -761,7 +761,18 @@ destroying the layer cancels pending work and ignores late results.
 `src/data/aisLiveVessels.js` assembles `createVesselLayer` from the
 `./layers/vessels` package entry. The factory owns feed lifecycle, keyed records,
 rendering, selection, trails and cards in separate components. The standalone
-entry supplies its AISStream source, scene services and existing row limits.
+entry supplies its `/api/vessels` source, scene services and existing row limits.
+
+`/api/vessels` serves Fintraffic Digitraffic Marine AIS by default
+(`server/providers/vessels/digitraffic.js`: request-driven poll, at most once a
+minute, into the shared `ais-store.js` via `ingestVesselPositions`). AISStream
+joins only with `AISSTREAM_API_KEY` plus `AISSTREAM_COMMERCIAL_OK=1`
+(docs/COMMERCIAL_CONFIG.md). Rows, records and `getSelectedInfo()` carry the
+reporting `source`; `X-Feed-Source`/`X-Feed-Coverage` name the active feeds.
+While Digitraffic is the sole source and its last poll is current, the payload
+adds `complete: true` and `snapshotAt`, which `vesselSnapshot` reads as current
+coverage even with zero rows — the authoritative-empty path — without
+inventing a position time.
 
 Incomplete observations retain missing keyed vessels for at most five minutes
 since their last accepted receipt, within the renderer's row budget (plus the
