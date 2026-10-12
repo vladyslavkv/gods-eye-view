@@ -1313,6 +1313,7 @@
       "src/maps/imagery.js",
       "src/maps/registry.js",
       "src/maps/terrain.js",
+      "src/sources/optInSources.js",
       "src/maps/terrainRetry.js",
       "src/keySetupCore.mjs",
       "src/localRequestGate.mjs",

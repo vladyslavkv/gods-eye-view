@@ -1,5 +1,8 @@
 import * as Cesium from 'cesium';
 import { createTerrainRetryPolicy } from './terrainRetry.js';
+import { createOptInSources } from '../sources/optInSources.js';
+
+const terrainOptIn = createOptInSources();
 
 /** Re:Earth / Mapterhorn ellipsoidal quantized mesh, CC BY 4.0. */
 export const KEYLESS_TERRAIN_URL =
@@ -47,7 +50,23 @@ export function createKeylessTerrainResource(
   });
 }
 
-export async function createKeylessTerrain() {
+/**
+ * Keyless globe terrain. The hosted Re:Earth service publishes no service
+ * terms, so it is used only when the server opts in (REEARTH_TERRAIN_ENABLED=1,
+ * docs/COMMERCIAL_CONFIG.md); otherwise the globe is the flat ellipsoid.
+ * @param {unknown} [_request] Map-stack request (unused).
+ * @param {{enabled?: () => Promise<boolean>}} [options]
+ */
+export async function createKeylessTerrain(
+  _request,
+  { enabled = () => terrainOptIn('reearth-terrain') } = {},
+) {
+  if (!(await enabled())) {
+    console.info(
+      '[MapStack] Re:Earth terrain disabled — not licensed for commercial use in this build; using flat ellipsoid terrain',
+    );
+    return { provider: new Cesium.EllipsoidTerrainProvider() };
+  }
   try {
     return {
       provider: await Cesium.CesiumTerrainProvider.fromUrl(

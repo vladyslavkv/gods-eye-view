@@ -139,8 +139,19 @@ test('CelesTrak retains fresh and stale TLE caches', async () => {
   assert.equal(stale.headers['x-tle-cache'], 'STALE-ERROR');
 });
 
+const terrainOptIn = { process: { cwd: () => '/fixture', env: { REEARTH_TERRAIN_ENABLED: '1' } } };
+
+test('should answer terrain unavailable without a lookup when REEARTH_TERRAIN_ENABLED is unset', async () => {
+  let resolved = 0;
+  const app = fixture('terrainHeightsProxy', { resolveTerrainHeightRequest: async () => { resolved++; return { status: 200, body: {} }; } });
+  const res = await app.request('/?points=1,2');
+  assert.equal(res.status, 503);
+  assert.deepEqual(JSON.parse(res.body), { error: 'Re:Earth terrain disabled — not licensed for commercial use in this build', disabled: true });
+  assert.equal(resolved, 0);
+});
+
 test('terrain unexpected failures hide details', async () => {
-  const res = await fixture('terrainHeightsProxy').request('/?points=1,2');
+  const res = await fixture('terrainHeightsProxy', terrainOptIn).request('/?points=1,2');
   assert.equal(res.status, 500);
   assert.deepEqual(JSON.parse(res.body), { error: 'terrain heights proxy error' });
 });
@@ -149,7 +160,7 @@ test('terrain validation and resolver outcomes remain intact', async () => {
   const invalid = await fixture('terrainHeightsProxy', { parseTerrainPoints: () => null }).request();
   assert.equal(invalid.status, 400);
   const body = { results: [{ height: 12 }] };
-  const app = fixture('terrainHeightsProxy', { resolveTerrainHeightRequest: async () => ({ status: 200, body, upstreamError: new Error(detail) }) });
+  const app = fixture('terrainHeightsProxy', { ...terrainOptIn, resolveTerrainHeightRequest: async () => ({ status: 200, body, upstreamError: new Error(detail) }) });
   const res = await app.request('/?points=1,2');
   assert.equal(res.status, 200);
   assert.deepEqual(JSON.parse(res.body), body);

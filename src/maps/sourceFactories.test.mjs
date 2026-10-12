@@ -23,7 +23,8 @@ test('Esri uses Re:Earth without keys and preserves ion terrain when configured'
     assert.equal(esri.available, true);
     assert.equal(esri.terrain.id, 'keyless');
     assert.equal(esri.terrain.create, createKeylessTerrain);
-    await esri.terrain.create();
+    // Re:Earth is default-off; this case opts in the way the server would.
+    await esri.terrain.create(undefined, { enabled: async () => true });
     // A Resource, not a bare URL: the retry policy rides on it (terrainRetry.js).
     assert.equal(calls.length, 1);
     assert.ok(calls[0] instanceof Cesium.Resource);
@@ -160,4 +161,31 @@ test('both Google 3D routes keep tiles drawing while draped imagery loads', asyn
   assert.equal(calls[1][0].accessToken, 'token');
   assert.equal(calls[1][1].asynchronouslyLoadImagery, true);
   assert.equal(calls[1][1].enableCollision, true);
+});
+
+test('should use flat ellipsoid terrain without contacting Re:Earth when it is not opted in', async (t) => {
+  const fromUrl = t.mock.method(
+    Cesium.CesiumTerrainProvider,
+    'fromUrl',
+    async () => ({}),
+  );
+  const { provider } = await createKeylessTerrain(undefined, {
+    enabled: async () => false,
+  });
+  assert.ok(provider instanceof Cesium.EllipsoidTerrainProvider);
+  assert.equal(fromUrl.mock.callCount(), 0, 'Re:Earth was contacted');
+});
+
+test('should treat an unreachable opt-in endpoint as Re:Earth disabled', async (t) => {
+  t.mock.method(globalThis, 'fetch', async () => {
+    throw new TypeError('Failed to fetch');
+  });
+  const fromUrl = t.mock.method(
+    Cesium.CesiumTerrainProvider,
+    'fromUrl',
+    async () => ({}),
+  );
+  const { provider } = await createKeylessTerrain();
+  assert.ok(provider instanceof Cesium.EllipsoidTerrainProvider);
+  assert.equal(fromUrl.mock.callCount(), 0, 'Re:Earth was contacted');
 });

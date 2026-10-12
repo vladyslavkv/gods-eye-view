@@ -7,6 +7,10 @@ import { firmsProxy } from 'gods-eye-view/server/providers/firms';
 import { gbfsProxy } from 'gods-eye-view/server/providers/gbfs';
 import { localProviderPlugins } from '../../server/providers/local.js';
 
+// These exercise opted-in providers: Re:Earth terrain heights is default-off
+// (docs/COMMERCIAL_CONFIG.md), so this suite opts in explicitly.
+process.env.REEARTH_TERRAIN_ENABLED = '1';
+
 function install(plugin) {
   const routes = new Map();
   plugin.configureServer({
