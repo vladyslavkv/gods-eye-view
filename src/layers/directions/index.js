@@ -841,9 +841,11 @@ export function createDirectionsLayer({ services, source }) {
         _error =
           payload?.error === 'no route found'
             ? 'No route found between A and B'
-            : payload?.error
-              ? `Routing failed: ${payload.error}`
-              : 'No route found between A and B';
+            : payload?.unavailable === true
+              ? payload.error
+              : payload?.error
+                ? `Routing failed: ${payload.error}`
+                : 'No route found between A and B';
         return;
       }
       _route = route;

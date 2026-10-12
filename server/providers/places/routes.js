@@ -215,13 +215,34 @@ async function fetchRoute({
   return { payload, error: null };
 }
 
+/** What the Directions layer shows when no router is configured. */
+export const ROUTING_UNAVAILABLE_ERROR =
+  'routing unavailable — no router configured (OSRM_BASE_URL); the public FOSSGIS servers are not licensed for commercial use in this build';
+
+/**
+ * The OSRM server for one profile, or null when none is configured.
+ * OSRM_BASE_URL names the operator's own or commercially licensed OSRM;
+ * `{profile}` in it becomes foot, car or bike. The public FOSSGIS servers allow
+ * commercial use only where routing is not a substantial part of an online
+ * offering, so they are never a silent default: pointing OSRM_BASE_URL at
+ * https://routing.openstreetmap.de/routed-{profile} is the explicit opt-in.
+ * @param {string} profile
+ * @param {Record<string, string>} endpoints Per-profile overrides from config.
+ * @returns {string|null}
+ */
+function routeBase(profile, endpoints) {
+  const template =
+    endpoints[profile] || String(process.env.OSRM_BASE_URL || '').trim();
+  return template ? template.replaceAll('{profile}', profile) : null;
+}
+
 export function installRouteMiddleware(
   middlewares,
   { endpoints = {}, fetchImpl = (...args) => fetch(...args) } = {},
 ) {
   const _routeCache = new Map();
 
-  // Real OSM routing via the public FOSSGIS OSRM servers (foot/car/bike).
+  // Real OSM routing via the configured OSRM servers (foot/car/bike).
   // GET /api/route?profile=foot|car|bike&coords=lon,lat;lon,lat[;...][&steps=1]
   // `steps=1` adds turn-by-turn maneuvers (src/data/routeSteps.js) and is the
   // only shape that asks the upstream for them. A response WITHOUT steps is
@@ -247,6 +268,18 @@ export function installRouteMiddleware(
       const raw = (url.searchParams.get('profile') || 'foot').toLowerCase();
       const profile = normalizeRouteProfile(raw);
       if (!profile) return fail('invalid profile');
+      const base = routeBase(profile, endpoints);
+      if (!base) {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(
+          JSON.stringify({
+            ok: false,
+            unavailable: true,
+            error: ROUTING_UNAVAILABLE_ERROR,
+          }),
+        );
+        return;
+      }
       const osrmProfile = profile === 'car' ? 'driving' : profile;
       const pairs = (url.searchParams.get('coords') || '')
         .split(';')
@@ -290,9 +323,6 @@ export function installRouteMiddleware(
       if (totalKm > ROUTE_MAX_TOTAL_KM) return fail('route too long');
       const coords = clean.join(';');
       const cacheKey = `${profile}|${coords}`;
-      const base =
-        endpoints[profile] ||
-        `https://routing.openstreetmap.de/routed-${profile}`;
       const now = Date.now();
       const wantSteps = url.searchParams.get('steps') === '1';
       // A caller that did not ask for maneuvers never sees them, even when the
