@@ -14,6 +14,7 @@ export function normalizeVessel(row) {
     name: String(row.name || row.mmsi || 'VESSEL'),
     mmsi: String(row.mmsi || '').trim(),
     reference: row.reference ?? String(row.mmsi || '').trim(),
+    source: String(row.source || ''),
     imo: String(row.imo || ''),
     type: String(row.type || ''),
     destination: String(row.destination || ''),
@@ -64,6 +65,7 @@ export class VesselRecords {
       if (record) {
         const before = effects.beforeUpdate(record);
         record.reference = next.reference;
+        record.source = next.source;
         record.receivedAtMs = next.receivedAtMs;
         record.lat = next.lat;
         record.lon = next.lon;

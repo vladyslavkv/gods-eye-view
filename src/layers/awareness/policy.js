@@ -52,7 +52,7 @@ export const VESSEL_FOCUS_RADIUS_M = 3000;
 export const SOURCE_LABEL = {
   flights: 'adsb.lol',
   military: 'adsb.lol',
-  'ais-live-vessels': 'AISStream',
+  'ais-live-vessels': 'Digitraffic',
   'military-installations': 'OpenStreetMap',
 };
 

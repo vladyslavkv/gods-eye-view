@@ -111,3 +111,13 @@ test('unkeyed records rebuild on each refresh and numeric coercion keeps unknown
   assert.equal(probe.store.all.length, 1);
   assert.equal(normalizeVessel(row('bad', { lon: Infinity })), null);
 });
+
+test('should keep the reporting source on a vessel record when it is added and updated', () => {
+  const probe = setup();
+  probe.reconcile([row('111', { source: 'Digitraffic' })]);
+  const record = probe.store.byMmsi.get('111');
+  assert.equal(record.source, 'Digitraffic');
+  probe.reconcile([row('111', { source: 'AISStream' })]);
+  assert.equal(record.source, 'AISStream');
+  assert.equal(normalizeVessel(row('222')).source, '');
+});

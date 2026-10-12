@@ -37,6 +37,23 @@ function install(plugin, preview = false) {
   };
 }
 
+/** A Digitraffic feed that never reaches the network. */
+function offlineDigitraffic() {
+  return {
+    poll: async () => {},
+    snapshot: () => ({
+      status: 'connecting',
+      error: null,
+      lastMessageAt: null,
+      snapshotAt: null,
+      silentForMs: null,
+      nextAttemptAt: null,
+      staleAfterMs: 180000,
+      rowCount: 0,
+    }),
+  };
+}
+
 function environment(t, values) {
   for (const [key, value] of Object.entries(values)) {
     const original = process.env[key];
@@ -71,7 +88,9 @@ test('flights route reads adsb.lol by region, callsign or address and never cont
     assert.ok(options.signal instanceof AbortSignal);
     return Response.json({
       now: now / 1000,
-      ac: [{ hex: 'abc123', flight: 'UAL1', lat: 30, lon: -97, alt_baro: 10000 }],
+      ac: [
+        { hex: 'abc123', flight: 'UAL1', lat: 30, lon: -97, alt_baro: 10000 },
+      ],
     });
   });
   const fresh = await import(
@@ -88,7 +107,10 @@ test('flights route reads adsb.lol by region, callsign or address and never cont
   assert.equal(cached.headers['x-feed-cache'], 'HIT');
   assert.equal(calls.length, 1);
   const byCallsign = await flights('/api/flights', '?callsign=ual1');
-  assert.equal(byCallsign.headers['x-flight-coverage'], 'worldwide callsign lookup');
+  assert.equal(
+    byCallsign.headers['x-flight-coverage'],
+    'worldwide callsign lookup',
+  );
   assert.equal(calls.at(-1), 'https://api.adsb.lol/v2/callsign/UAL1');
   await flights('/api/flights', '?icao24=ABC123');
   assert.equal(calls.at(-1), 'https://api.adsb.lol/v2/hex/abc123');
@@ -96,7 +118,11 @@ test('flights route reads adsb.lol by region, callsign or address and never cont
     assert.equal((await flights('/api/flights', query)).statusCode, 400, query);
   assert.equal(calls.length, 3);
   now += 13_000;
-  t.mock.method(globalThis, 'fetch', async () => new Response('', { status: 503 }));
+  t.mock.method(
+    globalThis,
+    'fetch',
+    async () => new Response('', { status: 503 }),
+  );
   const stale = await flights('/api/flights', '?lat=30&lon=-97');
   assert.equal(stale.statusCode, 200);
   assert.equal(stale.headers['x-feed-cache'], 'STALE');
@@ -157,6 +183,7 @@ test('AIS preview route ingests through the socket, returns tracks and disposes 
   });
   environment(t, {
     AISSTREAM_API_KEY: 'fixture-key',
+    AISSTREAM_COMMERCIAL_OK: '1',
     AISSTREAM_URL: `ws://127.0.0.1:${upstream.address().port}`,
     AISSTREAM_BOUNDING_BOXES: undefined,
     AISSTREAM_MESSAGE_TYPES: undefined,
@@ -192,7 +219,7 @@ test('AIS preview route ingests through the socket, returns tracks and disposes 
       }
     });
   });
-  const plugin = providers.aisLiveProxy();
+  const plugin = providers.aisLiveProxy({ digitraffic: offlineDigitraffic() });
   t.after(() => plugin.closeBundle());
   const request = install(plugin, true);
   let res;
@@ -219,6 +246,30 @@ test('AIS preview route ingests through the socket, returns tracks and disposes 
   await restarted('/api/vessels');
   for (let i = 0; i < 100 && sockets.length < 2; i++) await delay(10);
   assert.equal(sockets.length, 2);
+});
+
+test('should open no AISStream socket when a key is set without the commercial opt-in', async (t) => {
+  const upstream = new WebSocketServer({ host: '127.0.0.1', port: 0 });
+  await once(upstream, 'listening');
+  t.after(() => new Promise((resolve) => upstream.close(resolve)));
+  let connections = 0;
+  upstream.on('connection', (socket) => {
+    connections += 1;
+    socket.terminate();
+  });
+  environment(t, {
+    AISSTREAM_API_KEY: 'fixture-key',
+    AISSTREAM_COMMERCIAL_OK: undefined,
+    AISSTREAM_URL: `ws://127.0.0.1:${upstream.address().port}`,
+    AISSTREAM_SILENCE_TIMEOUT_MS: '0',
+  });
+  const plugin = providers.aisLiveProxy({ digitraffic: offlineDigitraffic() });
+  t.after(() => plugin.closeBundle());
+  const res = await install(plugin, true)('/api/vessels');
+  await delay(50);
+  assert.equal(connections, 0);
+  assert.equal(res.headers['x-feed-source'], 'Digitraffic');
+  assert.equal(JSON.parse(res.body).feeds.aisstream.status, 'disabled');
 });
 
 test('military aircraft route serves stale cache on an upstream 429 and cools down for Retry-After', async (t) => {

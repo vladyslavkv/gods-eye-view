@@ -74,6 +74,9 @@ export function updateContext(info, heading) {
     const value = element?.querySelector('strong');
     if (value)
       value.textContent = cohort.count === null ? '?' : String(cohort.count);
+    // The feed that answered (e.g. "AISStream + Digitraffic"), not a fixed name.
+    const source = element?.querySelector('small');
+    if (source && cohort.source) source.textContent = cohort.source;
     element?.classList.toggle('unknown', cohort.relationship === 'UNKNOWN');
     if (cohort.count === null) unknownCount += 1;
     for (const item of cohort.nearest) nearest.push({ ...item, cohort });
