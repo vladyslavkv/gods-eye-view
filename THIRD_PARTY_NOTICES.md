@@ -53,5 +53,7 @@ non-commercial only: the TeleGeography Submarine Cable Map (CC BY-NC-SA 3.0),
 the Bhote Koshi event imagery and derived river centerline (Vantor / GeoPera,
 CC BY-NC 4.0), the OpenSky Network flight feed (non-commercial license) and
 Google News RSS (personal, non-commercial use only). None of their files ship
-here and the app no longer contacts those services. Data sources that remain
+here and the app no longer contacts those services. The Submarine Cables
+layer was later restored on an OpenStreetMap extract (ODbL 1.0); no
+TeleGeography data, URL or credit returned. Data sources that remain
 are listed with their licenses in `DATA_SOURCES.md`.

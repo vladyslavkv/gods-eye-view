@@ -4,7 +4,7 @@ God's Eye View's **code** is [MIT](LICENSE)-licensed. **The MIT grant covers the
 
 How to read this:
 
-- **This fork removed the NonCommercial-only sources.** TeleGeography cables, the Bhote Koshi event data, OpenSky and Google News RSS are gone — see [Removed in this fork](#removed-in-this-fork). Every remaining source still keeps its own license and terms (attribution, share-alike on data, provider ToS, quotas); review them for your deployment.
+- **This fork removed the NonCommercial-only sources.** TeleGeography cables (the Submarine Cables layer was restored on OpenStreetMap data), the Bhote Koshi event data, OpenSky and Google News RSS are gone — see [Removed in this fork](#removed-in-this-fork). Every remaining source still keeps its own license and terms (attribution, share-alike on data, provider ToS, quotas); review them for your deployment.
 - **If your use doesn't fit a dataset's license, remove that dataset.** Each bundled dataset is a self-contained folder with its own provenance README.
 - **Attribution is shown in-app** and listed here. Keep it intact. The required Google/Cesium credit renders on the on-globe credit line (bottom-left, `#cesium-credits`), and every per-layer credit below is registered into the expandable **"Data attribution"** lightbox on that line (`src/data/dataCredits.js` → `viewer.creditDisplay.addStaticCredit`). Both stay visible in clean-view and recording modes.
 - **Bundled model attribution lives beside the model files.** [`public/models/README.md`](public/models/README.md) records each shipped model's creator, source, license, and modification status.
@@ -15,7 +15,7 @@ This fork is maintained for use inside a commercial product, so every third-part
 
 | Source | License that excluded it | What was removed |
 | --- | --- | --- |
-| TeleGeography Submarine Cable Map | CC BY-NC-SA 3.0 | The bundled cable and landing-point GeoJSON, the Submarine Cables layer, its query tool, voice entry and credit |
+| TeleGeography Submarine Cable Map | CC BY-NC-SA 3.0 | The bundled cable and landing-point GeoJSON and its credit. The Submarine Cables layer, query tool and voice entry were later restored on an OpenStreetMap extract (ODbL 1.0, see [Bundled snapshots](#bundled-snapshots)); no TeleGeography data, URL or credit returned, and its old share token `u` stays retired |
 | Bhote Koshi 2026 event imagery and derived river centerline (Vantor / GeoPera) | CC BY-NC 4.0 | The event pack, the river-path dataset, the event and locator layers, the Nepal scene pack, its query tool and credits |
 | OpenSky Network | Non-commercial license | The OpenSky proxy, OAuth handling, credential setup and credit; flights now come from adsb.lol (ODbL 1.0) only, and the app never contacts OpenSky |
 | Google News RSS | Personal, non-commercial use only | The RSS request and credit; regional headlines come from GDELT only |
@@ -125,6 +125,7 @@ Snapshots below are under `src/data/local_data/`.
 | --------------------------------------------------------------------------- | --------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------ | --------------------------------------------------------------------------- |
 | **Datacenters** (4,351) | `datacenters/` | **ODbL 1.0** (OpenStreetMap extract) | ✅ (attribution + share-alike on data) | © OpenStreetMap contributors (shared credit) |
 | **Dams** (704) | `dams/` | **ODbL 1.0** (OpenInfraMap / OSM extract) | ✅ (attribution + share-alike on data) | © OpenStreetMap contributors (shared credit) + Open Infrastructure Map |
+| **Submarine cables** (909 cables, 58 cable landing stations) | `osm_submarine_cables/` | **ODbL 1.0** (OpenStreetMap extract via Overpass, `scripts/build-osm-submarine-cables.mjs`) | ✅ (attribution + share-alike on data) | Submarine cables: © OpenStreetMap contributors (ODbL) |
 | **Military area names** (36,466) | `osm_military_names/` | **ODbL 1.0** (OpenStreetMap, via Overture Maps) | ✅ (attribution + share-alike on data) | © OpenStreetMap contributors (shared credit) + Overture Maps Foundation |
 | **Natural Earth physical regions** (1,046 land + 292 marine named polygons) | `natural_earth/`                  | **Public domain**                                                                                         | ✅ (no restrictions)                             | "Made with Natural Earth" (courtesy credit — not legally required)          |
 | **DataSF Analysis Neighborhoods** (41 SF neighborhood polygons)             | `neighborhoods/`                  | **PDDL 1.0** (public domain)                                                                              | ✅ (no restrictions)                             | "City & County of San Francisco — DataSF" (courtesy — not legally required) |
@@ -150,7 +151,7 @@ fixtures retain their provenance in `src/data/fixtures/README.md`.
 
 ### Bundled OpenStreetMap data
 
-Bundled OSM-derived data is distributed under [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/), separately from the MIT code: [datacenters](src/data/local_data/datacenters/), [dams](src/data/local_data/dams/) (via Open Infrastructure Map), [military names](src/data/local_data/osm_military_names/), and [OSM test fixtures](src/data/fixtures/). Keep © OpenStreetMap contributors and offer modified databases under ODbL.
+Bundled OSM-derived data is distributed under [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/), separately from the MIT code: [datacenters](src/data/local_data/datacenters/), [dams](src/data/local_data/dams/) (via Open Infrastructure Map), [submarine cables](src/data/local_data/osm_submarine_cables/), [military names](src/data/local_data/osm_military_names/), and [OSM test fixtures](src/data/fixtures/). Keep © OpenStreetMap contributors and offer modified databases under ODbL.
 
 ### NASA FIRMS acknowledgement
 

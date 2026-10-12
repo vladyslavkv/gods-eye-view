@@ -349,6 +349,12 @@ const layers = [
     },
   },
   {
+    id: 'submarine-cables',
+    aliases: ['submarine cables', 'undersea cables', 'cables'],
+    context: false,
+    noQuery: 'cable records are not loaded for queries',
+  },
+  {
     // Global Context owns this layer; voice reaches it through
     // set_context_mode, never a bare toggle.
     id: 'military-awareness',

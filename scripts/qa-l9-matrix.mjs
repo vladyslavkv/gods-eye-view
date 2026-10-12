@@ -176,6 +176,7 @@ const CREDIT_EXPECTATIONS = {
   'local-datacenters': /OpenStreetMap/i,
   'local-dams': /OpenStreetMap/i,
   'local-firms': /FIRMS/i,
+  'submarine-cables': /OpenStreetMap/i,
   'local-neighborhoods': /DataSF|San Francisco/i,
   'weather-effects': /Open-Meteo/i,
 };
@@ -670,7 +671,7 @@ check({
     // blockers because both are legitimately present in the shipping tree: one
     // is the name of the auto-detection default view (README, CHANGELOG,
     // src/data/*), the other appears inside the bundled public geodata
-    // (datacenter records). Scanning for them
+    // (datacenter and submarine-cable landing points). Scanning for them
     // produces only false positives — flagged as a stale checklist item in
     // the maintainers' release runbook, not silently honoured.
     //
@@ -1046,7 +1047,7 @@ const BROWSER_CHECKS = [
   ['C8', 'Vessels: live rows when keyed, honest UNAVAILABLE when not'],
   ['C9', 'Fires: live cells when keyed, honest KEY REQUIRED when not'],
   ['C10', 'Traffic: LIVE mode when keyed, clearly-labelled SIMULATION when not'],
-  ['C11', 'Bundled layers render: datacenters, dams, installations'],
+  ['C11', 'Bundled layers render: datacenters, dams, submarine cables, installations'],
   ['C12', 'Attribution lightbox lists a credit for every enabled layer'],
   ['C13', 'Clean-UI keeps the Google/Cesium credit line visible (ToS)'],
   ['C14', 'No key material reaches browser state, URLs or storage'],
@@ -1136,13 +1137,13 @@ check({
   run: harness({ id: 'D11', script: 'qa-firms.mjs', args: ['--url', APP_URL], timeoutMs: 900000 }),
 });
 check({
-  id: 'D12', group: 'D', desc: 'qa-overlay-baseline (datacenters scene) — overlay/label baseline',
+  id: 'D12', group: 'D', desc: 'qa-overlay-baseline (submarine cables scene) — overlay/label baseline',
   heavy: true,
   run: harness({
     id: 'D12',
     script: 'qa-overlay-baseline.mjs',
-    args: ['--url', APP_URL, '--scene', 'datacenters', '--json', OVERLAY_JSON],
-    parse: readOverlaySummary('local-datacenters', OVERLAY_JSON),
+    args: ['--url', APP_URL, '--scene', 'cables', '--json', OVERLAY_JSON],
+    parse: readOverlaySummary('submarine-cables', OVERLAY_JSON),
     timeoutMs: 900000,
   }),
 });
@@ -1372,7 +1373,7 @@ async function runBrowserGroup(record) {
     quiesced = true;
     await evalBounded(async () => {
       const dm = window.__godsEyeView.dataManager;
-      const heavy = ['cctv', 'traffic', 'flights', 'satellites',
+      const heavy = ['cctv', 'traffic', 'flights', 'satellites', 'submarine-cables',
         'local-datacenters', 'local-dams', 'military-installations', 'earthquakes'];
       for (const id of heavy) {
         if (!dm.layers.has(id)) continue;
@@ -1622,7 +1623,7 @@ async function runBrowserGroup(record) {
     }, null, 30000);
     await new Promise((r) => setTimeout(r, 2000));
 
-    const bundled = ['local-datacenters', 'local-dams'];
+    const bundled = ['local-datacenters', 'local-dams', 'submarine-cables'];
     const out = [];
     const stillLoading = [];
     let loadNote = '';
@@ -1740,7 +1741,7 @@ async function runBrowserGroup(record) {
     // standalone (`--only C12`) nothing is on, and it would pass vacuously off
     // the static credit list — so self-arm a deterministic set first.
     const armed = (await evalBounded(() => [...(window.__godsEyeView.dataManager.getEnabledLayerIds?.() || [])], null, 20000)) || [];
-    const SELF_ARM = ['flights', 'satellites', 'earthquakes'];
+    const SELF_ARM = ['flights', 'satellites', 'earthquakes', 'submarine-cables'];
     if (armed.length === 0) {
       for (const id of SELF_ARM) {
         // eslint-disable-next-line no-await-in-loop

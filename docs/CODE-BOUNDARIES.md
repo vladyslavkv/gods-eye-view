@@ -630,9 +630,11 @@ explicit operations. Both exports exclude Cesium, DOM and application assembly.
 The snapshot renderer applies record changes; rendering owns a weak map of
 geometry and billboard resources used by cards, picking and trails.
 
-`gods-eye-view/sources/reference` constructs fresh earthquake and fire-perimeter
-source instances independently of standalone setup. Individual sources remain
-available through `layers/earthquakes/source` and `layers/perimeters/source`.
+`gods-eye-view/sources/reference` constructs fresh earthquake, fire-perimeter
+and bundled cable source instances independently of standalone setup.
+Individual sources remain available through `layers/earthquakes/source`,
+`layers/perimeters/source` and `layers/submarine-cables/source`. The cable
+source serves OpenStreetMap data under ODbL 1.0; keep its attribution.
 
 ## Geocoding and feature-query providers
 

@@ -130,6 +130,10 @@ test('every scene click handler consults ownership before it picks', () => {
       'src/layers/satellites/interaction.js',
       'viewer.scene.pick(click.position)',
     ],
+    [
+      'src/layers/submarineCables/interaction.js',
+      'viewer.scene.pick(click.position)',
+    ],
     ['src/layers/vessels/selection.js', 'viewer.scene.pick(click.position)'],
   ];
   for (const [file, firstPick] of guarded) {
