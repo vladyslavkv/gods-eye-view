@@ -16,7 +16,7 @@ This fork is maintained for use inside a commercial product, so every third-part
 | Source | License that excluded it | What was removed |
 | --- | --- | --- |
 | TeleGeography Submarine Cable Map | CC BY-NC-SA 3.0 | The bundled cable and landing-point GeoJSON, the Submarine Cables layer, its query tool, voice entry and credit |
-| Bhote Koshi 2026 event imagery and derived river centerline (Vantor / GeoPera) | CC BY-NC 4.0 | The event pack, the river-path dataset, the event and locator layers, the Nepal scene pack, its query tool and credits |
+| Bhote Koshi 2026 event imagery and derived river centerline (Vantor / GeoPera) | CC BY-NC 4.0 | The event pack, the river-path dataset, the event and locator layers, the Nepal scene pack, its query tool and credits. The disaster-events feature is now served live by GDACS (CC BY 4.0) — see [Disaster events: GDACS](#disaster-events-gdacs); none of the removed event data, imagery or scene recipes returned |
 | OpenSky Network | Non-commercial license | The OpenSky proxy, OAuth handling, credential setup and credit; flights now come from adsb.lol (ODbL 1.0) only, and the app never contacts OpenSky |
 | Google News RSS | Personal, non-commercial use only | The RSS request and credit; regional headlines come from GDELT only |
 
@@ -46,6 +46,7 @@ Layer-state share tokens of the removed layers stay reserved in `src/data/layerS
 | **USGS**                                                              | Earthquakes                                                                                                                         | U.S. public domain                                                                                                                                                                                                                                                                                                                                    | "Data courtesy of the U.S. Geological Survey"                                                                                               |
 | **NASA GIBS** (WMTS tiles + Worldview Snapshots) and **NASA CMR** (granule catalog) | Recent Imagery layer: HLS S30/L30 (Sentinel-2, Landsat 8/9) and VIIRS true-colour tiles draped on the map, per-day thumbnails and PNG exports; the HLS granule catalog (dates, cloud, footprints) for a selected box | U.S. public domain (NASA data); keyless, browser-direct (CORS `*`); no bulk use — one 30-day catalog query per box, tiles bounded to the box, six tile requests in flight | "We acknowledge the use of imagery provided by services from NASA's Global Imagery Browse Services (GIBS), part of NASA's Earth Science Data and Information System (ESDIS)." — [gibs.earthdata.nasa.gov](https://gibs.earthdata.nasa.gov), [HLS](https://lpdaac.usgs.gov/products/hlss30v002/) |
 | **NIFC WFIGS** (Wildland Fire Interagency Geospatial Services, ArcGIS feature service) | Fire Perimeters layer: current interagency wildfire incident perimeters, containment, and incident facts | U.S. public domain (interagency wildland-fire data published through the [NIFC Open Data portal](https://data-nifc.opendata.arcgis.com/)); fetched keyless through `/api/fire-perimeters` (5-minute server cache) with `exceededTransferLimit` paging | "Wildfire perimeters: National Interagency Fire Center (WFIGS)" |
+| **GDACS** (Global Disaster Alert and Coordination System; `www.gdacs.org/gdacsapi/api/events/geteventlist/MAP?eventtype=…`) | Disaster Events layer and `get_disaster_events`: current earthquake, tropical-cyclone, flood, volcano, wildfire and drought alerts with their green/orange/red alert level. Keyless through `/api/events`; 10-minute server cache, last good snapshot served as stale for up to 24 h | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) under the European Commission reuse policy ([legal notice](https://commission.europa.eu/legal-notice_en#copyright-notice)), to which the [GDACS terms of use](https://www.gdacs.org/About/termofuse.aspx) link for copyright; GDACS logos and names are excluded | "Disaster events: GDACS, European Commission Joint Research Centre (CC BY 4.0); modified (filtered, restyled)" |
 | **InciWeb** (inciweb.wildfire.gov)                                    | Per-incident "InciWeb ↗" card links to official incident pages (narratives, evacuation/closure notices) | U.S. government public incident information. Links are matched best-effort by incident name and state, with incident page origin and update times checked on selection. Same-origin `/api/fire-perimeters/inciweb` routes cache the catalog for 1 hour and publication metadata for 30 minutes; linked pages remain InciWeb content | "Incident information: InciWeb (inciweb.wildfire.gov)" |
 | **OpenFreeMap / OpenMapTiles** | Vector tiles | OpenStreetMap data under ODbL 1.0 | OpenFreeMap © OpenMapTiles |
 | **Overture Maps Foundation** | Military area names pack | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/) | Overture Maps Foundation |
@@ -304,6 +305,30 @@ This implementation is original; those contributions have not been merged here.
 - **Delivery:** keyless same-origin `/api/cyclones`, five-minute singleflight cache,
   fixed upstream endpoints, bounded bodies/geometry/deadline, explicit unavailable/stale states.
   Direct status fetching is unsuitable in browsers because NHC does not advertise CORS.
+
+### Disaster events: GDACS
+
+- **Source:** [GDACS](https://www.gdacs.org/) (Global Disaster Alert and Coordination System, a cooperation
+  framework of the UN and the European Commission; event data and API operated by the EC Joint Research
+  Centre). Fixed endpoint `https://www.gdacs.org/gdacsapi/api/events/geteventlist/MAP?eventtype=<EQ|TC|FL|VO|WF|DR>`,
+  documented in the [GDACS API Swagger](https://www.gdacs.org/gdacsapi/swagger/v1/swagger.json)
+  ("Get events' list to show in the homepage's map by the eventtype specified in the parameter").
+- **Rights:** the [GDACS terms of use](https://www.gdacs.org/About/termofuse.aspx) footer links "Copyright" to the
+  [European Commission legal notice](https://commission.europa.eu/legal-notice_en#copyright-notice), which states:
+  "Unless otherwise indicated (e.g. in individual copyright notices), content owned by the EU on this website is
+  licensed under the Creative Commons Attribution 4.0 International (CC BY 4.0) licence. This means that reuse is
+  allowed, provided appropriate credit is given and changes are indicated." The same notice excludes "logos and
+  names" from the reuse policy, so no GDACS logo or icon is used. Both pages fetched and checked 2026-10-12.
+- **Credit (shown in-app):** "Disaster events: GDACS, European Commission Joint Research Centre (CC BY 4.0);
+  modified (filtered, restyled)". Changes made: one centroid marker per event (outline polygons and secondary
+  flood points dropped), re-coloured by alert level, type codes as labels, dates normalised to UTC ISO.
+- **Meaning:** GDACS notes its earthquake, tsunami and cyclone notifications "are automatic, produced by algorithms
+  and not reviewed by human experts" and should not be used for decisions without confirmation; the card links each
+  event to its GDACS report page.
+- **Delivery:** keyless same-origin `/api/events`, six fixed upstream requests per refresh with an identifying
+  User-Agent, 8 MiB body cap per type, 30 s deadline, 10-minute cache, singleflight, per-client rate limit.
+  A failed refresh serves the last good snapshot with `stale: true` for up to 24 hours, then `unavailable: true`
+  with no events — never an empty world presented as current.
 
 ### Weather: observed lightning density
 

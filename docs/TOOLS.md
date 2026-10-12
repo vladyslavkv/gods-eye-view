@@ -290,10 +290,11 @@ and the development server's internal routes. See SECURITY.md.
 | `get_regional_brief` | `regional` | What and where a location is, its weather and recent headlines |
 | `get_cyclones` | `cyclones` | Active NHC/CPHC tropical cyclones, optionally in an area |
 | `get_fire_perimeters` | `perimeters` | Mapped WFIGS wildfire perimeters in an area, largest first |
+| `get_disaster_events` | `disasters` | Current GDACS disaster alerts (earthquake, cyclone, flood, volcano, wildfire, drought), most severe first; filter by type, minimum alert level and area |
 | `get_terrain_height` | `terrain` | Ground, geoid and ellipsoid heights at up to 20 points |
 | `find_military_installations` | `installations` | OpenStreetMap military sites in an area of at most 10° per side |
 | `get_map_features` | `features` | Administrative areas, named places or monuments at a location (needs Overpass) |
-| `situation_brief` | `weather` | Weather, earthquakes, fires, aircraft, ships and cyclones for an area, by section |
+| `situation_brief` | `weather` | Weather, earthquakes, fires, aircraft, ships, cyclones and GDACS disaster alerts for an area, by section |
 | `military_awareness` | `military` | Military and other aircraft, ships and military installations within 250 km of a point, by section |
 | `get_hud_caption` | `weather`, `summary` | The app's heads-up display caption for an area |
 | `show_in_gods_eye_view` | `app` | A view in God's Eye View: the live panel in clients with MCP Apps, and a link everywhere; takes another answer's view or an area or camera, layers, style, map, marks and something to follow |
