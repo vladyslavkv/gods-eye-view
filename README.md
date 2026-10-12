@@ -30,7 +30,7 @@ _“pretty cool”_ — [Brendan Eich](https://x.com/BrendanEich/status/20945920
 
 ## Commercial-clean fork
 
-Commercial-clean fork: TeleGeography cables, Bhote Koshi event data, OpenSky and Google News RSS removed; see [DATA_SOURCES.md](DATA_SOURCES.md).
+Commercial-clean fork: TeleGeography cables (the Submarine Cables layer now runs on OpenStreetMap data), Bhote Koshi event data, OpenSky and Google News RSS removed; see [DATA_SOURCES.md](DATA_SOURCES.md).
 
 ---
 
@@ -333,7 +333,7 @@ In the app, **Data Layers** groups them as Movement, Cameras, Infrastructure, Ev
 
 _The Space Missions layer replaying a Falcon 9 ascent — labeled `RECONSTRUCTED ESTIMATE`, scrubbable 0.25×–4×._
 
-**Also on the globe:** neighborhood overlays · an optional cockpit WX cloud effect. **Bundled static infrastructure:** Datacenters (4,351) and Dams (704).
+**Also on the globe:** neighborhood overlays · an optional cockpit WX cloud effect. **Bundled static infrastructure:** Datacenters (4,351), Dams (704), and Submarine Cables (909 OpenStreetMap cable ways, 58 cable landing stations).
 
 **Missing a layer you want?** Open an issue — or add it and send the PR.
 

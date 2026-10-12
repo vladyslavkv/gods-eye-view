@@ -6,8 +6,8 @@ import * as Cesium from 'cesium';
  * Legal requirement (see DATA_SOURCES.md, findings H10/H11 in
  * docs/pre-ship-audit-2026-07-01.md): every third-party data layer this app can
  * display carries its own license and required attribution — ODbL (OSM
- * datacenters/dams, adsb.lol, Overpass roads), NASA FIRMS, CelesTrak, USGS,
- * City of Austin, Fintraffic (CC BY 4.0),
+ * datacenters/dams/submarine cables, adsb.lol, Overpass roads), NASA FIRMS,
+ * CelesTrak, USGS, City of Austin, Fintraffic (CC BY 4.0),
  * The MIT code license does NOT cover this data.
  *
  * These credits are registered ONCE at init as STATIC credits with
@@ -302,6 +302,10 @@ export const DATA_CREDITS = [
   {
     key: 'dams',
     html: 'Dams: Open Infrastructure Map',
+  },
+  {
+    key: 'osm-submarine-cables',
+    html: 'Submarine cables: © OpenStreetMap contributors (ODbL)',
   },
   {
     key: 'firms',

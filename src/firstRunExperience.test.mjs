@@ -674,11 +674,12 @@ test('the voice TOOL SCHEMA matches the pinned contract — the mission mapping 
   // schema, which may not carry top-level anyOf), and Contacts requested-radius
   // list descriptions; the missions still ride existing tools.
   // Street Level adds toggle enum values and the generated alias hint.
-  // The removed non-commercial cable layer drops its enum value and aliases.
-  assert.equal(block.length, 29671, 'serialized tool schema length drifted');
+  // The submarine cable layer returns on OpenStreetMap data under the id
+  // 'submarine-cables' (no vendor alias).
+  assert.equal(block.length, 29760, 'serialized tool schema length drifted');
   assert.equal(
     crypto.createHash('sha256').update(block).digest('hex'),
-    '8270a10b5c63e237163dcab5d043cc628af1aad3276b296606d3f813a3f0c2a3',
+    'd27bf7c4f10ea758ed46a2cfecf2dc67a4d0b2ade5275964c995b06dac90d150',
     'the first-run missions must ride EXISTING tools: no schema edit, no cache bust',
   );
   const instructions = fs.readFileSync(new URL('../server/providers/openai/instructions.js', import.meta.url), 'utf8');
@@ -695,7 +696,7 @@ test('the voice TOOL SCHEMA matches the pinned contract — the mission mapping 
   const mapping = instructions.slice(instructions.indexOf('NAMED VIEWS are shorthand'));
   const paragraph = mapping.slice(0, mapping.indexOf("',\n"));
   for (const layerId of [
-    'local-datacenters', 'local-dams', 'local-firms', 'earthquakes',
+    'local-datacenters', 'local-dams', 'submarine-cables', 'local-firms', 'earthquakes',
   ]) {
     assert.ok(paragraph.includes(layerId), `mapping must name the existing ${layerId} enum value`);
   }

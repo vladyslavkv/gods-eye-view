@@ -286,6 +286,7 @@ and the development server's internal routes. See SECURITY.md.
 | `get_weather_map` | `weatherMaps` | The latest NOAA radar, satellite or lightning map image over an area |
 | `get_wind` | `wind` | GFS or IFS model wind 10 m above ground at a location |
 | `get_recent_imagery` | `imagery` | The most recent clear Landsat/Sentinel-2 image of an area (VIIRS fallback) |
+| `find_submarine_cables` | `cables` | OpenStreetMap submarine telecom cables and cable landing stations by area or name (ODbL) |
 | `find_infrastructure` | `infrastructure` | OpenStreetMap datacenters or dams in an area, nearest first (ODbL) |
 | `get_regional_brief` | `regional` | What and where a location is, its weather and recent headlines |
 | `get_cyclones` | `cyclones` | Active NHC/CPHC tropical cyclones, optionally in an area |

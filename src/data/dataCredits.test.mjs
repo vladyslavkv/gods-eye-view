@@ -56,6 +56,17 @@ test('OpenStreetMap has one generic data credit with separate tile and names dis
   );
 });
 
+test('should credit submarine cables to OpenStreetMap contributors when the layer is bundled', () => {
+  const credit = DATA_CREDITS.find(
+    (entry) => entry.key === 'osm-submarine-cables',
+  );
+  assert.equal(
+    credit?.html,
+    'Submarine cables: © OpenStreetMap contributors (ODbL)',
+  );
+  assert.ok(DATA_CREDITS.every((entry) => !/telegeography/i.test(entry.html)));
+});
+
 test('inline OSM attribution persists until its last display owner leaves', async (t) => {
   const { showOsmCredit, hideOsmCredit } = await import('./dataCredits.js');
   t.mock.timers.enable({ apis: ['setTimeout'] });
