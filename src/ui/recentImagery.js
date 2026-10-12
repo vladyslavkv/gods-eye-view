@@ -20,7 +20,7 @@ import {
 
 const PANEL_ID = 'recent-imagery-panel';
 const OVERVIEW_MIN_BOX_KM = 25;
-const ESRI_NOTE = 'Imagery on Esri · Google 3D returns when cleared';
+const GLOBE_NOTE = 'Imagery on globe · Google 3D returns when cleared';
 const MODE_LABELS = [
   ['image', 'IMAGE'],
   ['basemap', 'VS BASEMAP'],
@@ -366,7 +366,7 @@ export function createRecentImageryPanel({
   function renderNotice() {
     const warning = snapshot.boxError || snapshot.error || exportError;
     const text =
-      warning || snapshot.notice || (snapshot.borrowedEsri ? ESRI_NOTE : '');
+      warning || snapshot.notice || (snapshot.borrowedEsri ? GLOBE_NOTE : '');
     set(noticeText, 'textContent', text);
     attribute(noticeText, 'title', text);
     toggle(notice, 'warn', Boolean(warning));

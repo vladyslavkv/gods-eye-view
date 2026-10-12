@@ -19,6 +19,7 @@ export const PRESENTED_MAP_STACK_IDS = Object.freeze([
   'bing-labels',
   'esri-imagery',
   'osm',
+  'blue-marble',
 ]);
 
 /**
@@ -69,7 +70,10 @@ export function mapStackChipModels(stacks, activeId) {
     (Array.isArray(stacks) ? stacks : []).map((stack) => [stack?.id, stack]),
   );
   return PRESENTED_MAP_STACK_IDS.map((id) => stacksById.get(id))
-    .filter(Boolean)
+    .filter(
+      (stack) =>
+        stack && !(stack.hideWhenUnavailable && stack.available === false),
+    )
     .map((stack) => mapStackChipModel(stack, activeId));
 }
 

@@ -70,9 +70,12 @@ const settle = async () => {
   for (let i = 0; i < 20; i++) await Promise.resolve();
 };
 const descriptor = (id) => ({ id, label: id, kind: 'imagery' });
-function publicFixture() {
+function publicFixture({ esriImageryLicensed = true } = {}) {
   const tileset = { show: true };
-  const registry = createDefaultMapSources({ googleTileset: tileset });
+  const registry = createDefaultMapSources({
+    googleTileset: tileset,
+    esriImageryLicensed,
+  });
   const providers = new Map();
   for (const source of registry.sources) {
     if (!source.imagery) continue;
@@ -459,8 +462,8 @@ test('imagery host tileset follows supplied, owned and globe map sources', async
   assert.equal(controller.getImageryHostTileset(), null);
 });
 
-function leaseFixture() {
-  const env = publicFixture();
+function leaseFixture(options) {
+  const env = publicFixture(options);
   const switches = [];
   const setStack = env.controller.setStack.bind(env.controller);
   env.controller.setStack = (id, options) => {
@@ -515,6 +518,23 @@ test("the 'esri' policy switches from any other stack and release restores it", 
     assert.deepEqual(env.switches, ['esri-imagery', initial]);
     env.controller.destroy();
   }
+});
+
+test('should lease NASA Blue Marble for a comparison when Esri is not licensed', async () => {
+  const env = leaseFixture({ esriImageryLicensed: false });
+  env.switches.length = 0;
+  const lease = env.controller.acquireImageryComparison({
+    owner: 'recent-imagery',
+    switchPolicy: 'esri-if-photoreal',
+  });
+  assert.deepEqual(await lease.ready, {
+    status: 'ready',
+    activeId: 'blue-marble',
+  });
+  await lease.release();
+  assert.equal(env.controller.getActiveId(), 'photoreal');
+  assert.deepEqual(env.switches, ['blue-marble', 'photoreal']);
+  env.controller.destroy();
 });
 
 test("the 'esri-if-photoreal' policy leaves any 2D basemap alone", async () => {
@@ -652,9 +672,11 @@ test('an unavailable comparison stack reports failure and release leaves the map
   const env = leaseFixture();
   const errors = [];
   env.controller._onError = (message) => errors.push(message);
-  const esri = env.controller._sources.get('esri-imagery');
-  esri.available = false;
-  esri.unavailableReason = 'Esri offline';
+  // Esri unlicensed hands the comparison to Blue Marble; that one is down too.
+  env.controller._sources.get('esri-imagery').available = false;
+  const blueMarble = env.controller._sources.get('blue-marble');
+  blueMarble.available = false;
+  blueMarble.unavailableReason = 'Blue Marble offline';
   const lease = env.controller.acquireImageryComparison({
     owner: 'nepal',
     switchPolicy: 'esri',
@@ -664,8 +686,8 @@ test('an unavailable comparison stack reports failure and release leaves the map
     activeId: 'photoreal',
   });
   await lease.release();
-  assert.deepEqual(env.switches, ['esri-imagery']);
-  assert.deepEqual(errors, ['Esri offline']);
+  assert.deepEqual(env.switches, ['blue-marble']);
+  assert.deepEqual(errors, ['Blue Marble offline']);
   assert.equal(env.controller.getActiveId(), 'photoreal');
   env.controller.destroy();
 });

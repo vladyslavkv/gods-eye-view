@@ -142,11 +142,12 @@ export const DATA_CREDITS = [
   {
     key: 'nasa-gibs',
     html:
-      'Recent imagery: We acknowledge the use of imagery provided by services from ' +
+      'Blue Marble basemap and recent imagery: We acknowledge the use of imagery provided by services from ' +
       "NASA's Global Imagery Browse Services (GIBS), part of NASA's Earth Science " +
       'Data and Information System (ESDIS). ' +
       '<a href="https://gibs.earthdata.nasa.gov" target="_blank" rel="noopener">gibs.earthdata.nasa.gov</a> · ' +
-      '<a href="https://lpdaac.usgs.gov/products/hlss30v002/" target="_blank" rel="noopener">HLS product page</a>',
+      '<a href="https://lpdaac.usgs.gov/products/hlss30v002/" target="_blank" rel="noopener">HLS product page</a> · ' +
+      'Blue Marble: Next Generation produced by Reto Stöckli, NASA Earth Observatory (NASA Goddard Space Flight Center)',
   },
   {
     key: 'wfigs',

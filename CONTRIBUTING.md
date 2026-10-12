@@ -16,8 +16,10 @@ npm run doctor
 ./scripts/dev-fresh.sh        # or: npm run dev (keys are optional)
 ```
 
-No key is required to start: the app boots on keyless Esri World Imagery with
-keyless terrain, and OSM takes over automatically if Esri is unreachable.
+No key is required to start: the app boots on keyless NASA Blue Marble (GIBS)
+with keyless terrain, and OSM takes over automatically if Blue Marble is
+unreachable. Esri World Imagery is opt-in (`ESRI_IMAGERY_LICENSED=1`, see
+docs/COMMERCIAL_CONFIG.md).
 Google Maps provides direct photorealistic 3D and place search; Cesium ion
 provides ion-hosted Google 3D plus optional Bing/world-terrain stacks.
 On macOS the launcher pulls optional keys from

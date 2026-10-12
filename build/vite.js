@@ -41,6 +41,14 @@ export const BROWSER_HEADERS = Object.freeze({
   'X-Content-Type-Options': 'nosniff',
 });
 
+/**
+ * Esri World Imagery is offered only when the operator declares a licence
+ * (docs/COMMERCIAL_CONFIG.md): exactly `ESRI_IMAGERY_LICENSED=1`.
+ */
+export function esriImageryLicensedFromEnv(env) {
+  return env?.ESRI_IMAGERY_LICENSED === '1';
+}
+
 /** Build browser assets with explicit inputs; never load environment or providers. */
 export function createBrowserViteConfig({
   plugins = [],
@@ -48,6 +56,7 @@ export function createBrowserViteConfig({
   googleApiKey,
   cesiumToken,
   mapillaryToken,
+  esriImageryLicensed = false,
   host = 'localhost',
   port = 4173,
   allowedHosts = DEFAULT_ALLOWED_HOSTS,
@@ -106,6 +115,10 @@ export function createBrowserViteConfig({
       'import.meta.env.MAPILLARY_CLIENT_TOKEN': JSON.stringify(
         mapillaryToken ?? '',
       ),
+      // Absent unless declared: the browser reads a missing flag as unlicensed.
+      ...(esriImageryLicensed === true
+        ? { 'import.meta.env.ESRI_IMAGERY_LICENSED': 'true' }
+        : {}),
     },
     build: { chunkSizeWarningLimit: 1500 },
   };

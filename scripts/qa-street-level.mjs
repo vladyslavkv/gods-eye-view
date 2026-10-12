@@ -1080,7 +1080,7 @@ async function main() {
         async () => {
           const original = await stacks.active();
           // Draped lines on flat imagery: the line is where it is drawn.
-          await stacks.set('esri-imagery');
+          await stacks.set('blue-marble');
           await uiUntil((u) => u.surface === 'draped');
           await waitForCoverage(page);
           const target = fixtures ? PHOTO_SEQUENCE_ID : null;
@@ -1306,10 +1306,10 @@ async function main() {
               [disabled, pressed],
             );
           const original = await stacks.active();
-          await stacks.set('esri-imagery');
+          await stacks.set('blue-marble');
           await followIs(true);
           let state = await follow();
-          assert.equal(state.disabled, true, 'disabled on Esri');
+          assert.equal(state.disabled, true, 'disabled on Blue Marble');
           assert.match(state.title, /needs the Google 3D map/);
           if (await stacks.photoreal()) {
             await stacks.set('photoreal');
@@ -1319,7 +1319,7 @@ async function main() {
             await clickPanelControl(page, '#sl-follow-btn');
             await followIs(false, 'true');
             assert.equal((await follow()).pressed, 'true');
-            await stacks.set('esri-imagery');
+            await stacks.set('blue-marble');
             await followIs(true, 'false');
             state = await follow();
             assert.equal(
@@ -1399,7 +1399,7 @@ async function main() {
               return { surface: u.surface, count: u.coverage.count };
             });
           const original = await stacks.active();
-          await stacks.set('esri-imagery');
+          await stacks.set('blue-marble');
           await page.waitForFunction(
             () =>
               window.__godsEyeView.dataManager.layers
@@ -1410,7 +1410,11 @@ async function main() {
           const coverageLoaded = () =>
             waitForCoverage(page, { timeout: 60_000 });
           await coverageLoaded();
-          assert.equal((await surface()).surface, 'draped', 'draped on Esri');
+          assert.equal(
+            (await surface()).surface,
+            'draped',
+            'draped on Blue Marble',
+          );
           if (await stacks.photoreal()) {
             await stacks.set('photoreal');
             await page.waitForFunction(

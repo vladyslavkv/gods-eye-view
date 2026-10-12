@@ -1,7 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as Cesium from 'cesium';
-import { createIonImagery } from './imagery.js';
+import {
+  createIonImagery,
+  createBlueMarbleImagery,
+  BLUE_MARBLE_TILE_URL,
+  ESRI_SOURCE_CREDIT,
+  GIBS_ATTRIBUTION_HTML,
+} from './imagery.js';
 import { createWorldTerrain, createKeylessTerrain } from './terrain.js';
 import { createDefaultMapSources } from './defaultSources.js';
 
@@ -16,7 +22,7 @@ test('Esri uses Re:Earth without keys and preserves ion terrain when configured'
     };
     Cesium.IonResource.fromAssetId = async () =>
       assert.fail('keyless mode must not acquire ion terrain');
-    const keyless = createDefaultMapSources();
+    const keyless = createDefaultMapSources({ esriImageryLicensed: true });
     const esri = keyless.sources.find(
       ({ descriptor }) => descriptor.id === 'esri-imagery',
     );
@@ -45,6 +51,7 @@ test('Esri uses Re:Earth without keys and preserves ion terrain when configured'
     ]) {
       const keyed = createDefaultMapSources({
         ...credentials,
+        esriImageryLicensed: true,
         googleTileset: { show: true },
       });
       assert.equal(
@@ -188,4 +195,62 @@ test('should treat an unreachable opt-in endpoint as Re:Earth disabled', async (
   const { provider } = await createKeylessTerrain();
   assert.ok(provider instanceof Cesium.EllipsoidTerrainProvider);
   assert.equal(fromUrl.mock.callCount(), 0, 'Re:Earth was contacted');
+});
+
+test('should land on NASA Blue Marble and keep Esri unavailable with its licence reason when no Esri licence is declared', () => {
+  const keyless = createDefaultMapSources();
+  assert.equal(keyless.defaultId, 'blue-marble');
+  const byId = (id) =>
+    keyless.sources.find(({ descriptor }) => descriptor.id === id);
+  assert.equal(byId('blue-marble').available, true);
+  assert.equal(byId('blue-marble').credit, GIBS_ATTRIBUTION_HTML);
+  assert.equal(byId('esri-imagery').available, false);
+  assert.equal(byId('esri-imagery').descriptor.hideWhenUnavailable, true);
+  assert.match(
+    byId('esri-imagery').unavailableReason,
+    /ESRI_IMAGERY_LICENSED=1/,
+  );
+  assert.match(
+    byId('esri-imagery').unavailableReason,
+    /ArcGIS Online subscription/,
+  );
+  // A Google tileset still wins the landing; Esri stays licence-gated.
+  const keyed = createDefaultMapSources({ googleTileset: { show: true } });
+  assert.equal(keyed.defaultId, 'photoreal');
+  assert.equal(
+    keyed.sources.find(({ descriptor }) => descriptor.id === 'esri-imagery')
+      .available,
+    false,
+  );
+});
+
+test('should offer Esri World Imagery when the operator declares an Esri licence', () => {
+  const licensed = createDefaultMapSources({ esriImageryLicensed: true });
+  const esri = licensed.sources.find(
+    ({ descriptor }) => descriptor.id === 'esri-imagery',
+  );
+  assert.equal(esri.available, true);
+  assert.equal(esri.unavailableReason, null);
+  assert.equal(licensed.defaultId, 'blue-marble');
+});
+
+test('should build the Blue Marble provider from the keyless GIBS Web Mercator endpoint when created', () => {
+  const provider = createBlueMarbleImagery();
+  assert.ok(provider instanceof Cesium.UrlTemplateImageryProvider);
+  assert.equal(provider.url, BLUE_MARBLE_TILE_URL);
+  assert.equal(
+    BLUE_MARBLE_TILE_URL,
+    'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/BlueMarble_ShadedRelief_Bathymetry/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpeg',
+  );
+  assert.equal(provider.maximumLevel, 8);
+  assert.ok(provider.tilingScheme instanceof Cesium.WebMercatorTilingScheme);
+  // The acknowledgement is the source's on-screen credit, not a second one.
+  assert.equal(provider.credit, undefined);
+});
+
+test('should credit Esri with the exact credit line of its ArcGIS Online item', () => {
+  assert.equal(
+    ESRI_SOURCE_CREDIT,
+    'Powered by Esri — Source: Esri, Vantor, Earthstar Geographics, and the GIS User Community',
+  );
 });

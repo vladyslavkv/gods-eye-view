@@ -1,4 +1,6 @@
 import * as Cesium from 'cesium';
+import { KEYLESS_DEFAULT_STACK_ID } from './imageryComparison.js';
+
 export const MAP_STACKS = [
   {
     id: 'photoreal',
@@ -29,12 +31,21 @@ export const MAP_STACKS = [
     shortLabel: 'SAT',
     kind: 'esri-imagery',
     requiresIon: false,
+    // Unlicensed it is off for good, not one key away: no tile to tease.
+    hideWhenUnavailable: true,
   },
   {
     id: 'osm',
     label: 'OSM',
     shortLabel: 'OSM',
     kind: 'osm',
+    requiresIon: false,
+  },
+  {
+    id: KEYLESS_DEFAULT_STACK_ID,
+    label: 'Blue Marble',
+    shortLabel: 'NASA',
+    kind: 'gibs',
     requiresIon: false,
   },
 ];

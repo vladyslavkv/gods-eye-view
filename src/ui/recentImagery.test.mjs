@@ -875,7 +875,7 @@ test('the notice line shows the refusal, then errors, then CLEAR, then the Esri 
   await settle();
   assert.equal(
     noticeText.textContent,
-    'Imagery on Esri · Google 3D returns when cleared',
+    'Imagery on globe · Google 3D returns when cleared',
   );
   assert.equal(notice.classList.contains('info'), true);
   f.layer.setBox({ west: 0, south: 0, east: 20, north: 20 });

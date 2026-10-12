@@ -677,10 +677,11 @@ test('the voice TOOL SCHEMA matches the pinned contract — the mission mapping 
   // The submarine cable layer returns on OpenStreetMap data under the id
   // 'submarine-cables' (no vendor alias).
   // GDACS disaster events add their layer enum value, aliases and fields.
-  assert.equal(block.length, 29949, 'serialized tool schema length drifted');
+  // The keyless NASA Blue Marble landing adds a map-stack value and hint.
+  assert.equal(block.length, 30021, 'serialized tool schema length drifted');
   assert.equal(
     crypto.createHash('sha256').update(block).digest('hex'),
-    '3b6f58748820590e93b9c1f2b8f73eeccd56c9f545b355c834eb4a6fcc825796',
+    '9544e306a52650c2016bb0521ef58a65a3c5abc139a37bff9b0b62340f7ee84c',
     'the first-run missions must ride EXISTING tools: no schema edit, no cache bust',
   );
   const instructions = fs.readFileSync(new URL('../server/providers/openai/instructions.js', import.meta.url), 'utf8');

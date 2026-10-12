@@ -156,6 +156,13 @@ test('doctor reports the keyless adsb.lol flights feed', () => {
   );
 });
 
+test('should report NASA Blue Marble as the keyless map when no Google or ion key is configured', () => {
+  assert.equal(
+    buildCapabilitySummary({}).map,
+    'NASA Blue Marble (GIBS, keyless) with keyless terrain; Esri World Imagery only with ESRI_IMAGERY_LICENSED=1',
+  );
+});
+
 test('doctor describes the credential ladder without exposing values', () => {
   const credentials = {
     GOOGLE_MAPS_API_KEY: { configured: false },

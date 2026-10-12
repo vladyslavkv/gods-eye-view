@@ -93,8 +93,8 @@ Start with the included data sources, then add your own. Each layer is a separat
 ## ⚡ Quick Start
 
 **Start without an account or API keys.** Both paths open the same app with
-Esri satellite imagery and keyless terrain. OSM is the fallback if Esri is
-unreachable. Flights, military traffic, satellites, earthquakes, public
+NASA Blue Marble imagery and keyless terrain. OSM is the fallback if Blue
+Marble is unreachable. Flights, military traffic, satellites, earthquakes, public
 cameras, radio, and launches are available without keys.
 
 For photorealistic 3D, add a **Cesium ion token** for eligible personal,
@@ -296,7 +296,7 @@ Twenty layers and map sources. **Seventeen have a keyless path.** Some offer add
 
 | Layer                       | What you get                                                                                                                                                                                                                                                                                                                                                                        | Source                                  | Auth                                                                                                |
 | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| 🗺️ **Map Stack**            | Esri satellite imagery, Google Photorealistic 3D, OSM, plus additional ion-hosted stacks                                                                                                                                                                                                                                                                                            | Esri / Google / Ion / OSM               | 🟢 Esri satellite + OSM · 🟡 ion-hosted Google 3D + world terrain · 🔴 direct Google + place search |
+| 🗺️ **Map Stack**            | NASA Blue Marble, Google Photorealistic 3D, OSM, Esri satellite (licence opt-in), plus ion-hosted stacks                                                                                                                                                                                                                                                                                            | NASA GIBS / Google / Ion / OSM / Esri   | 🟢 Blue Marble + OSM · 🟡 ion-hosted Google 3D + world terrain · 🔴 direct Google + place search |
 | ✈️ **Live Flights**         | Live aircraft within 250 nm of the view + route history                                                                                                                                                                                                                                                                                                                             | adsb.lol                                | 🟢                                                                                                   |
 | 🎖️ **Military Flights**     | ADS-B military traffic in amber                                                                                                                                                                                                                                                                                                                                                     | adsb.lol                                | 🟢                                                                                                  |
 | 🚢 **Live Vessels**         | Live ships around Finland and the Baltic (keyless); worldwide via opt-in AISStream                                                                                                                                                                                                                                                                                                                                                        | Fintraffic Digitraffic (CC BY 4.0)                               | 🟡                                                                                                  |
@@ -325,7 +325,7 @@ In the app, **Data Layers** groups them as Movement, Cameras, Infrastructure, Ev
 
 | You have                   | The globe you get                                                                                                                                                            |
 | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 🟢 Nothing                 | Esri World Imagery satellite basemap + keyless terrain, in 2D. OSM takes over automatically if Esri is unreachable; if terrain is unavailable the globe continues without it |
+| 🟢 Nothing                 | NASA Blue Marble basemap (GIBS) + keyless terrain, in 2D. OSM takes over automatically if Blue Marble is unreachable; if terrain is unavailable the globe continues without it |
 | 🟡 A free Cesium ion token | **Google Photorealistic 3D cities** and world terrain — eligible personal, non-commercial use; current ion terms and quotas apply                                            |
 | 🔴 A Google Maps key       | The same 3D direct from Google, plus Google place search — the billing-enabled, metered route                                                                                |
 
@@ -401,7 +401,7 @@ src/
 ├── ui.js                   # Runtime UI — panels, HUD, styles, control facade
 ├── hud.js                  # Intelligence HUD + AI scene summary
 ├── keySetup.js             # POWER UP panel — in-app provider keys (dev server only)
-├── mapStackController.js   # Basemap switching — Google 3D / Esri / OSM / ion stacks
+├── mapStackController.js   # Basemap switching — Google 3D / Blue Marble / Esri / OSM / ion stacks
 ├── voice/                  # OpenAI Realtime session + 30 voice tools
 ├── layers/                 # Layer components — weather, wind, cyclones, transit, ALPR, …
 ├── data/                   # One module per layer + orchestration + context store

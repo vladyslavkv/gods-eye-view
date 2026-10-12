@@ -39,7 +39,8 @@ test('the complete Realtime tool payload pins the manifest-generated layer relea
     // Street Level adds its toggle enum values and generated alias hint.
     // Submarine cables return on OpenStreetMap data as 'submarine-cables'.
     // GDACS disaster events add their layer enum value, aliases and fields.
-    '373a68bad1302804fbd422c1e18510e8098fed3b4ddc281e44e64fdb82ee1df4',
+    // The keyless NASA Blue Marble landing adds a map-stack value and hint.
+    'ded74baeabdb2a22aa1b74f1cf8182b26905f9c58c14ef0b6e237eab910f3671',
   );
 });
 
@@ -139,6 +140,9 @@ test('all legacy action arguments are byte-identical after removing the delibera
   // Cyber adds one HUD layout.
   const hud = property('set_hud').layout;
   hud.enum = hud.enum.filter((layout) => layout !== 'cyber');
+  // The keyless NASA Blue Marble landing adds one map stack.
+  const stack = property('set_map_stack').stack;
+  stack.enum = stack.enum.filter((id) => id !== 'blue-marble');
   // Derived by applying the same removals to the 4b56d0e9 actionSchemas.
   assert.equal(
     createHash('sha256').update(JSON.stringify(legacy)).digest('hex'),
