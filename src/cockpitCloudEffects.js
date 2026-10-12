@@ -431,7 +431,7 @@ export class CockpitCloudEffectsController {
       .then(async (payload) => {
         if (this.abort !== request || request.signal.aborted) return null;
         if (!payload?.weather)
-          throw new Error('Cloud weather observation unavailable');
+          throw new Error('Cloud weather forecast unavailable');
         this.weather = payload.weather;
         this.fetchedAt = Date.now();
         this.anchor = point;

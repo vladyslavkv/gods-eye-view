@@ -177,7 +177,7 @@ const CREDIT_EXPECTATIONS = {
   'local-dams': /OpenStreetMap/i,
   'local-firms': /FIRMS/i,
   'local-neighborhoods': /DataSF|San Francisco/i,
-  'weather-effects': /Open-Meteo/i,
+  'weather-effects': /MET Norway/i,
 };
 
 /**

@@ -28,44 +28,14 @@ const FEATURE_KINDS = {
 const round = (value, digits) =>
   Number.isFinite(value) ? Number(value.toFixed(digits)) : null;
 
-// WMO weather interpretation codes used by the weather provider.
-const WEATHER_CODES = {
-  0: 'clear sky',
-  1: 'mainly clear',
-  2: 'partly cloudy',
-  3: 'overcast',
-  45: 'fog',
-  48: 'depositing rime fog',
-  51: 'light drizzle',
-  53: 'drizzle',
-  55: 'dense drizzle',
-  56: 'light freezing drizzle',
-  57: 'freezing drizzle',
-  61: 'light rain',
-  63: 'rain',
-  65: 'heavy rain',
-  66: 'light freezing rain',
-  67: 'freezing rain',
-  71: 'light snow',
-  73: 'snow',
-  75: 'heavy snow',
-  77: 'snow grains',
-  80: 'light rain showers',
-  81: 'rain showers',
-  82: 'violent rain showers',
-  85: 'light snow showers',
-  86: 'snow showers',
-  95: 'thunderstorm',
-  96: 'thunderstorm with light hail',
-  99: 'thunderstorm with heavy hail',
-};
-
 function weatherRow(weather) {
   if (!weather) return null;
   return {
-    observed_at: weather.observedAt ?? null,
-    conditions: WEATHER_CODES[weather.weatherCode] ?? null,
-    weather_code: weather.weatherCode ?? null,
+    valid_at: weather.validAt ?? null,
+    forecast_updated_at: weather.forecastUpdatedAt ?? null,
+    kind: 'forecast',
+    conditions: weather.condition ?? null,
+    symbol_code: weather.symbolCode ?? null,
     temperature_c: weather.temperatureC ?? null,
     feels_like_c: weather.apparentTemperatureC ?? null,
     precipitation_mm: weather.precipitationMm ?? null,
@@ -83,15 +53,18 @@ function describeWeather(row) {
     Number.isFinite(row.temperature_c) && `${Math.round(row.temperature_c)}°C`,
     Number.isFinite(row.wind_kph) && `wind ${Math.round(row.wind_kph)} km/h`,
   ].filter(Boolean);
-  return parts.join(', ') || 'conditions unknown';
+  return parts.length
+    ? `${parts.join(', ')} (current-hour forecast)`
+    : 'conditions unknown';
 }
 
 export const getWeather = defineTool({
   name: 'get_weather',
   title: 'Current weather',
   description:
-    'Current weather at a location: conditions, temperature, feels-like, ' +
-    'precipitation, cloud cover, wind and visibility.',
+    'Current weather at a location from the MET Norway short-range forecast ' +
+    'for the current hour (model data, not an observation): conditions, ' +
+    'temperature, feels-like, next-hour precipitation, cloud cover and wind.',
   inputSchema: {
     type: 'object',
     properties: { location: POINT_SCHEMA },

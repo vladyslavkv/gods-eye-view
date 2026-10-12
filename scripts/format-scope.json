@@ -152,6 +152,7 @@
   "server/providers/regional/query.js",
   "server/providers/regional/weather-effects.js",
   "server/providers/regional/weather.js",
+  "server/providers/regional/weather.test.mjs",
   "server/standalone/key-setup.js",
   "src/tooling/localServices.test.mjs",
   "src/search/index.js",

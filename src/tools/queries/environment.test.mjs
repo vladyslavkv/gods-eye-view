@@ -9,14 +9,17 @@ import {
 } from '../index.js';
 
 const conditions = {
-  observedAt: '2026-10-01T19:15:00.000Z',
+  validAt: '2026-10-01T19:00:00.000Z',
+  forecastUpdatedAt: '2026-10-01T18:23:00.000Z',
+  symbolCode: 'cloudy',
+  condition: 'cloudy',
   temperatureC: 26.3,
   apparentTemperatureC: 32,
   precipitationMm: 0,
   cloudCoverPct: 100,
   windKph: 5.4,
   windDirectionDeg: 318,
-  visibilityM: 15400,
+  visibilityM: null,
   weatherCode: 3,
 };
 const weather = {
@@ -45,19 +48,21 @@ test('weather describes current conditions at a point or place', async () => {
   });
   assert.equal(
     result.summary,
-    'Weather at Austin, Texas: overcast, 26°C, wind 5 km/h.',
+    'Weather at Austin, Texas: cloudy, 26°C, wind 5 km/h (current-hour forecast).',
   );
   assert.deepEqual(result.data.weather, {
-    observed_at: '2026-10-01T19:15:00.000Z',
-    conditions: 'overcast',
-    weather_code: 3,
+    valid_at: '2026-10-01T19:00:00.000Z',
+    forecast_updated_at: '2026-10-01T18:23:00.000Z',
+    kind: 'forecast',
+    conditions: 'cloudy',
+    symbol_code: 'cloudy',
     temperature_c: 26.3,
     feels_like_c: 32,
     precipitation_mm: 0,
     cloud_cover_pct: 100,
     wind_kph: 5.4,
     wind_direction_deg: 318,
-    visibility_m: 15400,
+    visibility_m: null,
   });
   const [latitude, longitude] = weather.calls.at(-1);
   assert.ok(Math.abs(latitude - 30.31) < 1e-9 && longitude === -97.75);
@@ -90,7 +95,7 @@ test('the regional brief returns place, weather and at most ten headlines', asyn
   });
   assert.equal(
     result.summary,
-    'Edwards Plateau: overcast, 26°C, wind 5 km/h; 10 recent headlines.',
+    'Edwards Plateau: cloudy, 26°C, wind 5 km/h (current-hour forecast); 10 recent headlines.',
   );
   assert.equal(result.data.articles.length, 10);
   assert.deepEqual(result.data.articles[0], {
@@ -421,7 +426,7 @@ test('the situation brief combines available sections and marks failures', async
   });
   assert.equal(
     result.summary,
-    'Situation in Austin, Texas: Weather at Austin, Texas: overcast, 26°C, wind 5 km/h. ' +
+    'Situation in Austin, Texas: Weather at Austin, Texas: cloudy, 26°C, wind 5 km/h (current-hour forecast). ' +
       '1 earthquake of M2.5+ in the last 24 hours in Austin, Texas; strongest M3.1 near Austin.',
   );
   assert.deepEqual(Object.keys(result.data.sections), [

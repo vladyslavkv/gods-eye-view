@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { deriveWeatherEffectProfile, weatherAltitudeFactors } from './weatherEffectsMath.js';
+import { metSymbol } from './data/regionalModel.js';
 
 test('missing weather fails clear instead of inventing effects', () => {
   const profile = deriveWeatherEffectProfile(null);
@@ -54,6 +55,32 @@ test('snow codes never render rain droplets', () => {
   assert.ok(profile.snow > 0.3);
   assert.equal(profile.rain, 0);
   assert.equal(profile.droplets, 0);
+});
+
+test('should select the effect family from a MET Norway symbol when visibility is absent', () => {
+  const profileFor = (symbol) =>
+    deriveWeatherEffectProfile({
+      weatherCode: metSymbol(symbol).weatherCode,
+      cloudCoverPct: 90,
+      precipitationMm: 1,
+      visibilityM: null,
+      windKph: 20,
+      windDirectionDeg: 180,
+    });
+  const clear = deriveWeatherEffectProfile({ weatherCode: metSymbol('clearsky_day').weatherCode, cloudCoverPct: 0, visibilityM: null });
+  assert.equal(clear.available, true);
+  assert.deepEqual([clear.cloud, clear.rain, clear.snow, clear.fog, clear.storm], [0, 0, 0, 0, 0]);
+  const rain = profileFor('rainshowers_night');
+  assert.ok(rain.rain > 0 && rain.snow === 0 && rain.storm === 0);
+  const sleet = profileFor('lightsleet');
+  assert.ok(sleet.rain > 0 && sleet.snow === 0);
+  const snow = profileFor('heavysnowshowers_polartwilight');
+  assert.ok(snow.snow > 0 && snow.rain === 0);
+  const storm = profileFor('heavyrainandthunder');
+  assert.ok(storm.storm >= 0.55 && storm.rain > 0);
+  const fog = profileFor('fog');
+  assert.ok(fog.fog >= 0.78 && fog.rain === 0);
+  assert.equal(profileFor('cloudy').fog, 0);
 });
 
 test('weather effects attenuate above the ground-weather layer', () => {

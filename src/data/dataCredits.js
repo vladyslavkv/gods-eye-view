@@ -163,11 +163,11 @@ export const DATA_CREDITS = [
     html: 'Keyless place search: <a href="https://photon.komoot.io" target="_blank" rel="noopener">Photon</a> (komoot)',
   },
   {
-    key: 'open-meteo',
+    key: 'met-norway',
     html:
-      'Cockpit current conditions: ' +
-      '<a href="https://open-meteo.com/en/licence" target="_blank" rel="noopener">Weather data by Open-Meteo.com</a> ' +
-      '(CC BY 4.0)',
+      'Cockpit current-hour forecast: ' +
+      '<a href="https://api.met.no/doc/License" target="_blank" rel="noopener">Weather data from MET Norway</a> ' +
+      '(<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>; values converted and mapped to cockpit conditions)',
   },
   {
     key: 'gdelt',

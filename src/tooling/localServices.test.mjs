@@ -127,15 +127,20 @@ test('weather-only requests share upstream work and retain fresh and stale respo
   let calls = 0;
   t.mock.method(globalThis, 'fetch', async (url) => {
     calls++;
-    assert.equal(new URL(url).hostname, 'api.open-meteo.com');
+    assert.equal(new URL(url).hostname, 'api.met.no');
     if (calls > 1) throw Error('offline');
     await new Promise((resolve) => setTimeout(resolve, 10));
     return Response.json({
-      current: {
-        time: '2026-09-12T12:00',
-        temperature_2m: 20,
-        weather_code: 0,
-        wind_speed_10m: 10,
+      properties: {
+        timeseries: [
+          {
+            time: new Date(Math.floor(now / 3600_000) * 3600_000).toISOString(),
+            data: {
+              instant: { details: { air_temperature: 20, wind_speed: 3 } },
+              next_1_hours: { summary: { symbol_code: 'clearsky_day' } },
+            },
+          },
+        ],
       },
     });
   });

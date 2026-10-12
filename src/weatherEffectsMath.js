@@ -8,7 +8,7 @@ function range01(value, min, max) {
 }
 
 /**
- * Convert source weather observations into bounded visual strengths. The WMO
+ * Convert source weather values (a current-hour forecast) into bounded visual strengths. The WMO
  * code selects the effect family; numeric observations only control strength.
  * Missing weather fails clear instead of inventing conditions.
  */
@@ -32,7 +32,9 @@ export function deriveWeatherEffectProfile(weather) {
   const cover = range01(weather.cloudCoverPct, 8, 100);
   const precipitation = Math.max(0, Number(weather.precipitationMm) || 0);
   const wind = range01(weather.windKph, 4, 90);
-  const visibilityM = Number(weather.visibilityM);
+  // Number(null) is 0: an absent visibility must not read as zero-metre fog.
+  const visibilityM =
+    weather.visibilityM == null ? NaN : Number(weather.visibilityM);
   const visibilityFog = Number.isFinite(visibilityM)
     ? range01(12000 - visibilityM, 0, 11500)
     : 0;
