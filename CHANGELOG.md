@@ -1,5 +1,11 @@
 # Changelog
 
+- Live vessels come from Fintraffic Digitraffic Marine AIS (keyless, CC BY 4.0,
+  Finland/Baltic) by default, with per-vessel source provenance and
+  authoritative empty coverage while it is the sole source. AISStream (no
+  published terms) now runs only with `AISSTREAM_COMMERCIAL_OK=1` in addition to
+  its key; see docs/COMMERCIAL_CONFIG.md.
+
 - Treat explicitly current, complete empty vessel coverage as a successful update,
   clearing obsolete contacts while retaining stale or incomplete snapshots.
 

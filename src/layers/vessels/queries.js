@@ -245,7 +245,8 @@ export function createQueries({
 
     icon: '◭',
 
-    source: 'AISStream',
+    // Replaced by the server's X-Feed-Source on the first snapshot.
+    source: 'Digitraffic',
 
     updateInterval: REFRESH_MS,
 
@@ -429,7 +430,7 @@ export function createQueries({
 
     /**
      * Get info about the currently selected vessel.
-     * @returns {{ mmsi: string, name: string, latitude: number, longitude: number, speedKt: number|null, course: number|null, type: string }|null}
+     * @returns {{ mmsi: string, name: string, latitude: number, longitude: number, speedKt: number|null, course: number|null, type: string, source: string|null }|null}
      */
     getSelectedInfo() {
       const record = state.selectedRecord;
@@ -442,6 +443,7 @@ export function createQueries({
         speedKt: record.speed,
         course: record.course,
         type: record.type,
+        source: record.source || null,
       };
     },
 

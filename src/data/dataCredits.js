@@ -112,9 +112,16 @@ export const DATA_CREDITS = [
       'explicit permission of David J Taylor, Edinburgh',
   },
   {
+    key: 'fintraffic-ais',
+    html:
+      'Vessels: Fintraffic / ' +
+      '<a href="https://www.digitraffic.fi/en/" target="_blank" rel="noopener">digitraffic.fi</a>, ' +
+      'license <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>',
+  },
+  {
     key: 'aisstream',
     html:
-      'Live vessels (AIS): ' +
+      'Live vessels (AIS, worldwide, operator opt-in): ' +
       '<a href="https://aisstream.io" target="_blank" rel="noopener">AISStream.io</a>',
   },
   {

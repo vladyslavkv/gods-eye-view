@@ -11,6 +11,11 @@ import {
   aisStreamRows,
   newestAisPositionAt,
 } from './ais-store.js';
+import {
+  createDigitrafficFeed,
+  DIGITRAFFIC_COVERAGE,
+  DIGITRAFFIC_SOURCE,
+} from './digitraffic.js';
 // ---------------------------------------------------------------------------
 // AISStream live vessel cache state
 // ---------------------------------------------------------------------------
@@ -63,18 +68,43 @@ let _aisNeedsRearm = false;
 let _aisWebSocketImpl;
 
 /**
- * Vite plugin: AISStream live vessel cache.
- *
- * AISStream does not support browser CORS and requires a private API key, so
- * the Vite server keeps one backend websocket open and exposes a same-origin
- * JSON snapshot to the Cesium layer.
+ * AISStream publishes no terms of service, so this commercial fork runs it
+ * only when the operator opts in explicitly on top of supplying a key
+ * (docs/COMMERCIAL_CONFIG.md).
  */
-export function aisLiveProxy() {
+function aisStreamEnabled() {
+  return (
+    Boolean(process.env.AISSTREAM_API_KEY) &&
+    process.env.AISSTREAM_COMMERCIAL_OK === '1'
+  );
+}
+
+/**
+ * Vite plugin: live vessel cache.
+ *
+ * Fintraffic Digitraffic (keyless, CC BY 4.0, Finland/Baltic) is always on and
+ * polled on demand. AISStream (worldwide websocket, private key, no CORS) is
+ * added only when aisStreamEnabled(). Both write one shared MMSI-keyed store,
+ * and every row names the source that reported it.
+ *
+ * @param {{digitraffic?: ReturnType<typeof createDigitrafficFeed>}} [deps]
+ */
+export function aisLiveProxy({ digitraffic = createDigitrafficFeed() } = {}) {
   function install(middlewares) {
     middlewares.use('/api/vessels', async (req, res) => {
       try {
-        res.setHeader('X-Feed-Source', 'AISStream');
-        ensureAisStreamConnection();
+        const streamOn = aisStreamEnabled();
+        res.setHeader(
+          'X-Feed-Source',
+          streamOn ? `AISStream + ${DIGITRAFFIC_SOURCE}` : DIGITRAFFIC_SOURCE,
+        );
+        res.setHeader(
+          'X-Feed-Coverage',
+          streamOn
+            ? `worldwide (AISStream) + ${DIGITRAFFIC_COVERAGE}`
+            : DIGITRAFFIC_COVERAGE,
+        );
+        if (streamOn) ensureAisStreamConnection();
         const incoming = new URL(req.url || '', 'http://localhost');
 
         // Track sub-route MUST be handled before the rows snapshot — this
@@ -101,13 +131,14 @@ export function aisLiveProxy() {
             JSON.stringify({
               mmsi,
               samples: readAisTrack(mmsi),
-              source: 'AISStream (accumulated since server start)',
+              source: 'AIS (accumulated since server start)',
               retainedSec: Math.floor(AISSTREAM_STALE_MS / 1000),
             }),
           );
           return;
         }
 
+        await digitraffic.poll();
         const maxRows = clampInt(
           incoming.searchParams.get('maxRows'),
           1,
@@ -115,28 +146,44 @@ export function aisLiveProxy() {
           AISSTREAM_CACHE_MAX,
         );
         const rows = aisStreamRows(maxRows);
+        const baltic = digitraffic.snapshot();
+        // With AISStream on, its socket state leads (it is the worldwide feed);
+        // otherwise Digitraffic's poll health is the feed's health.
+        const feed = streamOn ? aisStreamStatusSnapshot() : baltic;
+        // Only a sole, currently polled snapshot source can vouch that an
+        // empty answer means "no vessels" rather than "no data yet".
+        const authoritative = !streamOn && baltic.status === 'live';
 
-        const feed = aisStreamStatusSnapshot();
-
-        res.statusCode = process.env.AISSTREAM_API_KEY ? 200 : 503;
+        res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
         res.setHeader('Cache-Control', 'no-store');
         res.end(
           JSON.stringify({
             rows,
-            source: 'AISStream',
+            source: streamOn
+              ? `AISStream + ${DIGITRAFFIC_SOURCE}`
+              : DIGITRAFFIC_SOURCE,
             status: feed.status,
             error: feed.error,
             refreshing: feed.status !== 'live',
+            ...(authoritative
+              ? { complete: true, snapshotAt: baltic.snapshotAt }
+              : {}),
             newestPositionAt: newestAisPositionAt(rows),
             lastMessageAt: feed.lastMessageAt,
             // Honest-failure metadata: how long the feed has been quiet, which
             // recovery attempt we are on, and when the next one lands.
             silentForMs: feed.silentForMs,
-            reconnectAttempt: feed.reconnectAttempt,
+            reconnectAttempt: feed.reconnectAttempt ?? 0,
             nextAttemptAt: feed.nextAttemptAt,
             staleAfterMs: feed.staleAfterMs,
             watchdog: feed.watchdog,
+            feeds: {
+              digitraffic: baltic,
+              aisstream: streamOn
+                ? aisStreamStatusSnapshot()
+                : { status: 'disabled' },
+            },
           }),
         );
       } catch (error) {
@@ -145,7 +192,7 @@ export function aisLiveProxy() {
         res.setHeader('Cache-Control', 'no-store');
         res.end(
           JSON.stringify({
-            error: error?.message || 'AIS live stream error',
+            error: error?.message || 'AIS live feed error',
             rows: [],
           }),
         );
@@ -334,7 +381,7 @@ function startAisStreamWatchdogTick() {
   if (_aisStreamTickTimer) return;
   _aisStreamTickTimer = setInterval(() => {
     try {
-      ensureAisStreamConnection();
+      if (aisStreamEnabled()) ensureAisStreamConnection();
     } catch (error) {
       console.warn('[AISStream] watchdog tick failed', error?.message || '');
     }

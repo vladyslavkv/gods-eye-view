@@ -23,6 +23,8 @@ export function normalizeVesselObservation(row, reference = null) {
       epoch(row.last_position_epoch, 1000) ??
       epoch(Date.parse(row.last_position_UTC)),
     altitudeDatum: 'sea-surface',
+    // Provenance: the feed that reported this position (e.g. Digitraffic).
+    source: String(row.source || ''),
   };
 }
 
@@ -54,6 +56,12 @@ export function vesselSnapshot(
       (newest, row) => Math.max(newest || 0, row.observedAtMs || 0) || null,
       null,
     );
+  // An empty answer is current only when the server vouches for complete
+  // coverage at a named snapshot time; no position time is invented for it.
+  const emptyCoverageCurrent =
+    rows.length === 0 &&
+    payload?.complete === true &&
+    epoch(payload?.snapshotAt) != null;
   return {
     records,
     source,
@@ -63,9 +71,9 @@ export function vesselSnapshot(
     observedAtMs,
     freshness: payload?.refreshing
       ? 'stale'
-      : observedAtMs == null
-        ? 'unknown'
-        : 'current',
+      : observedAtMs != null || emptyCoverageCurrent
+        ? 'current'
+        : 'unknown',
     stale: Boolean(payload?.refreshing),
     // Connection state is distinct from receipt of a usable position.
     transportStatus:

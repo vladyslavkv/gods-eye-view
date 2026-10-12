@@ -157,6 +157,7 @@ export function createIngestion({
     return {
       mmsi: record.id,
       reference: record.reference,
+      source: record.source,
       lat: record.latitude,
       lon: record.longitude,
       name: record.name,

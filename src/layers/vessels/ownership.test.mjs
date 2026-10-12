@@ -405,3 +405,20 @@ test('empty coverage cannot hide stale, incomplete or rejected source data', asy
     assert.ok(layer.getStats().error, JSON.stringify(patch));
   }
 });
+
+test('should keep each vessel source name through ingestion when the snapshot carries it', async (t) => {
+  const originalDocument = globalThis.document;
+  globalThis.document = { getElementById: () => null };
+  t.after(() => {
+    if (originalDocument === undefined) delete globalThis.document;
+    else globalThis.document = originalDocument;
+  });
+  const { layer } = setup({
+    async getSnapshot() {
+      return snapshot([{ ...observation('111'), source: 'Digitraffic' }]);
+    },
+  });
+  await layer.update();
+  assert.equal(layer.selectById('111'), true);
+  assert.equal(layer.getSelectedInfo().source, 'Digitraffic');
+});
