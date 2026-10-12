@@ -47,6 +47,14 @@ export function createState({ services }) {
 
   layerState._activeCityIds = new Set();
 
+  /** @type {boolean} Whether the server opted in to feeds without published commercial terms. */
+
+  layerState._unlicensedFeedsEnabled = false;
+
+  /** @type {string[]} Providers in range that this build does not load. */
+
+  layerState._unlicensedInRange = [];
+
   /** @type {Map<string, { stationKeys: Set<string> }>} Per-city runtime tracking of rendered station keys. */
 
   layerState._cityRuntime = new Map();

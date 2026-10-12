@@ -9,6 +9,7 @@ import {
   FEED_STALE_AFTER_MS,
   isStaleVehicleFix,
 } from '../../layers/transit/policy.js';
+import { disabledNotLicensed } from '../../data/commercialUse.js';
 import { defineTool, ToolError } from '../catalog.js';
 import {
   AREA_SCHEMA,
@@ -67,17 +68,36 @@ export const getBikeShare = defineTool({
   async run(args, { services, signal }) {
     const area = await resolveArea(args.area, { services, signal });
     const { bikeshare } = services;
-    const { selected: systems, skipped } = covering(
-      area,
-      bikeshare.systems,
-      (system) => ({ lat: system.centerLat, lon: system.centerLon }),
-      (system) => system.loadRadiusKm,
+    // Systems without published commercial terms need the server's opt-in.
+    const unlicensedOk = (await bikeshare.unlicensedFeedsEnabled?.()) === true;
+    const allowed = (system) => system.licensed !== false || unlicensedOk;
+    const reach = (list) =>
+      covering(
+        area,
+        list,
+        (system) => ({ lat: system.centerLat, lon: system.centerLon }),
+        (system) => system.loadRadiusKm,
+      );
+    const { selected: systems, skipped } = reach(
+      bikeshare.systems.filter(allowed),
     );
-    if (!systems.length)
+    if (!systems.length) {
+      const disabled = reach(
+        bikeshare.systems.filter((system) => !allowed(system)),
+      ).selected;
       return {
-        summary: `No supported bike-share system covers ${area.label}.`,
-        data: { ...capRows([], args.limit), systems: [] },
+        summary: disabled.length
+          ? `${disabledNotLicensed(disabled.map((system) => system.provider).join(', '))}.`
+          : `No supported bike-share system covers ${area.label}.`,
+        data: {
+          ...capRows([], args.limit),
+          systems: [],
+          ...(disabled.length
+            ? { systems_disabled: disabled.map((system) => system.city) }
+            : {}),
+        },
       };
+    }
     const center = areaCenter(area);
     const results = await Promise.allSettled(
       systems.map(async (system) => {

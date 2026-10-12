@@ -60,10 +60,14 @@ export function createToolServices({ fetchImpl, appUrl, panelKey }) {
     radio: createRadioSource({ fetchImpl }),
     placeSearch: createPlaceSearchService({ fetchImpl }),
     routing: createRouteService({ fetchImpl }),
-    bikeshare: {
-      systems: GBFS_CITY_REGISTRY,
-      getStations: createBikeshareSource({ fetchImpl }).getStations,
-    },
+    bikeshare: (() => {
+      const source = createBikeshareSource({ fetchImpl });
+      return {
+        systems: GBFS_CITY_REGISTRY,
+        getStations: source.getStations,
+        unlicensedFeedsEnabled: source.unlicensedFeedsEnabled,
+      };
+    })(),
     transit: createTransitSource({ fetchImpl }),
     traffic: createTrafficSource({ fetchImpl, tileFetchImpl: fetchImpl }),
     weather: requests.weather,

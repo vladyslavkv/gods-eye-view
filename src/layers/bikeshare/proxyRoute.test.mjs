@@ -17,6 +17,11 @@ import { createModel } from './model.js';
 import { CITY_BY_ID } from './registry.js';
 
 const AUSTIN = CITY_BY_ID.get('austin-capmetro');
+const BAY_WHEELS = CITY_BY_ID.get('sf-bay-wheels');
+
+// Austin's PBSC feed publishes no licence, so the proxy serves it only when the
+// operator opts in; these round trips run with that opt-in set explicitly.
+process.env.GBFS_UNLICENSED_FEEDS_ENABLED = '1';
 
 const STATION_INFORMATION = {
   data: {
@@ -298,3 +303,42 @@ for (const hook of ['configureServer', 'configurePreviewServer']) {
     );
   });
 }
+
+test('should refuse an unlicensed GBFS feed as not licensed when GBFS_UNLICENSED_FEEDS_ENABLED is unset', async (t) => {
+  delete process.env.GBFS_UNLICENSED_FEEDS_ENABLED;
+  t.after(() => {
+    process.env.GBFS_UNLICENSED_FEEDS_ENABLED = '1';
+  });
+  await withUpstream(
+    { [AUSTIN.stationStatusUrl]: STATION_STATUS },
+    async (requested) => {
+      const response = await mountGbfsProxy()(
+        '/api/gbfs/' + encodeURIComponent(AUSTIN.stationStatusUrl),
+      );
+      assert.equal(response.status, 403);
+      assert.deepEqual(await response.json(), {
+        error:
+          'GBFS feed disabled — not licensed for commercial use in this build',
+        disabled: true,
+      });
+      assert.deepEqual(requested, []);
+    },
+  );
+});
+
+test('should proxy a Lyft-run feed when GBFS_UNLICENSED_FEEDS_ENABLED is unset', async (t) => {
+  delete process.env.GBFS_UNLICENSED_FEEDS_ENABLED;
+  t.after(() => {
+    process.env.GBFS_UNLICENSED_FEEDS_ENABLED = '1';
+  });
+  await withUpstream(
+    { [BAY_WHEELS.stationStatusUrl]: STATION_STATUS },
+    async (requested) => {
+      const response = await mountGbfsProxy()(
+        '/api/gbfs/' + encodeURIComponent(BAY_WHEELS.stationStatusUrl),
+      );
+      assert.equal(response.status, 200);
+      assert.deepEqual(requested, [BAY_WHEELS.stationStatusUrl]);
+    },
+  );
+});

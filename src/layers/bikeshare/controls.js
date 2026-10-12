@@ -1,3 +1,4 @@
+import { disabledNotLicensed } from '../../data/commercialUse.js';
 import { STATUS_POLL_MS } from './policy.js';
 
 export function createControls({ state: layerState, services, parts, source }) {
@@ -71,6 +72,15 @@ export function createControls({ state: layerState, services, parts, source }) {
             : 'scanning nearby systems...';
       }
       if (layerState._error) stats.error = layerState._error;
+      else if (
+        layerState._activeCityIds.size === 0 &&
+        layerState._unlicensedInRange?.length
+      ) {
+        stats.status = 'empty';
+        stats.statusMessage = disabledNotLicensed(
+          layerState._unlicensedInRange.join(', '),
+        );
+      }
       return stats;
     },
   };

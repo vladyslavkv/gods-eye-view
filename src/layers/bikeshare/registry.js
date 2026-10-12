@@ -1,3 +1,5 @@
+import { isCommerciallyLicensedGbfsHost } from '../../data/gbfsSource.js';
+
 function buildBcycleUrls(systemId) {
   return {
     stationInformationUrl: `https://gbfs.bcycle.com/${systemId}/station_information.json`,
@@ -375,6 +377,9 @@ function normalizeRegistryEntry(entry) {
     stationStatusUrl: stationStatusUrl.toString(),
     provider: String(entry?.provider || 'GBFS').trim() || 'GBFS',
     hosts,
+    // False for feeds without published commercial terms: they load only when
+    // the server opts in (GBFS_UNLICENSED_FEEDS_ENABLED=1).
+    licensed: hosts.every(isCommerciallyLicensedGbfsHost),
   };
 }
 const GBFS_CITY_REGISTRY = (() => {

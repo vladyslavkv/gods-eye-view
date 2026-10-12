@@ -81,13 +81,16 @@ export function createViewport({ state: layerState, services, parts, source }) {
   /**
    * Determine which cities are close enough to the camera to warrant loading.
    * Compares haversine distance from the camera center to each city's center
-   * against the city's configured load radius.
+   * against the city's configured load radius. A system without published
+   * commercial terms loads only when the server opts in; one in range that
+   * does not is named in `_unlicensedInRange` instead.
    * @param {{ lat: number, lon: number }} center - Camera center in degrees.
    * @returns {Set<string>} Set of city ids currently within load range.
    */
 
   function computeInRangeCities(center) {
     const active = new Set();
+    layerState._unlicensedInRange = [];
     if (!center) return active;
 
     for (const city of GBFS_CITY_REGISTRY) {
@@ -98,7 +101,10 @@ export function createViewport({ state: layerState, services, parts, source }) {
         city.centerLon,
       );
       const radius = Math.max(CITY_RANGE_BASE_KM, city.loadRadiusKm);
-      if (distance <= radius) active.add(city.id);
+      if (distance > radius) continue;
+      if (city.licensed || layerState._unlicensedFeedsEnabled === true)
+        active.add(city.id);
+      else layerState._unlicensedInRange.push(city.provider);
     }
 
     return active;
@@ -200,6 +206,9 @@ export function createViewport({ state: layerState, services, parts, source }) {
 
     const center = getCameraCenterLatLon(layerState._viewer);
     if (!center) return;
+    layerState._unlicensedFeedsEnabled =
+      (await source?.unlicensedFeedsEnabled?.()) === true;
+    if (generation !== layerState._proximityGeneration) return;
 
     // Diff active set against newly computed in-range set
     const nextActive = computeInRangeCities(center);

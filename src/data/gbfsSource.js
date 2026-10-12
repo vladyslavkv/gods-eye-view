@@ -11,6 +11,29 @@ const GBFS_ALLOWED_HOSTS = new Set([
 ]);
 
 /**
+ * GBFS hosts whose published data terms cover commercial use: Lyft's
+ * system-data policy (Bay Wheels, Citi Bike, Divvy, Capital Bikeshare,
+ * Bluebikes) permits it, short of re-publishing the data stand-alone. Every
+ * other allowlisted operator publishes no licence, so its feeds are served only
+ * when the operator opts in (GBFS_UNLICENSED_FEEDS_ENABLED=1,
+ * docs/COMMERCIAL_CONFIG.md).
+ */
+const GBFS_COMMERCIAL_HOSTS = new Set(['gbfs.lyft.com', 'gbfs.bluebikes.com']);
+
+/**
+ * Whether a GBFS host's terms cover commercial use without an opt-in.
+ * @param {string} hostname
+ * @returns {boolean}
+ */
+export function isCommerciallyLicensedGbfsHost(hostname) {
+  return GBFS_COMMERCIAL_HOSTS.has(
+    String(hostname || '')
+      .trim()
+      .toLowerCase(),
+  );
+}
+
+/**
  * Check whether a hostname is in the GBFS allowlist.
  *
  * Also accepts any subdomain of publicbikesystem.net.
